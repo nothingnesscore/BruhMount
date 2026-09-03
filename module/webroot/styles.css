@@ -467,3 +467,23 @@ md-icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
         animation-duration: 1ms !important; transition-duration: 1ms !important; scroll-behavior: auto !important;
     }
 }
+
+/* SUSFS status panel */
+#susfs-panel .segment-icon { color: var(--md-sys-color-on-surface-variant); }
+#susfs-panel.susfs-active .segment-icon { color: var(--md-sys-color-primary); }
+#susfs-panel.susfs-active #susfs-status { color: var(--md-sys-color-primary); font-weight: 500; }
+#susfs-panel.susfs-inactive #susfs-status { color: var(--md-sys-color-on-surface-variant); }
+
+.susfs-version-badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    padding: 1px 6px; margin-left: 6px;
+    border-radius: 4px;
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    vertical-align: middle;
+}
+.susfs-version-badge:empty { display: none; }
+
+/* Inline flex for SUSFS value row */
+#susfs-panel .info-value { display: flex; align-items: center; gap: 0; }

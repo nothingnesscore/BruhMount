@@ -55,5 +55,9 @@
   "status_version": "Version: {{version}}",
   "add_exclusion": "Add exclusion",
   "mode_lkm": "LKM",
-  "mode_builtin": "Built-in"
+  "mode_builtin": "Built-in",
+  "susfs_label": "SUSFS",
+  "susfs_active": "Active",
+  "susfs_inactive": "Inactive",
+  "nm_vfs_unavailable": "VFS inactive — SUSFS only mode"
 }

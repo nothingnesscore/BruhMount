@@ -307,8 +307,27 @@ function initNavigation() {
 }
 
 // Home
+let _hyperOSDetected = null; // null = unchecked, true/false = result
+
+async function detectAndApplyTheme() {
+    if (_hyperOSDetected !== null) return;
+    try {
+        const r = await exec(`getprop ro.mi.os.version.incremental 2>/dev/null; echo "|||"; getprop ro.miui.ui.version.name 2>/dev/null`);
+        const parts = r.stdout.split('|||').map(s => s.trim());
+        _hyperOSDetected = !!(parts[0] || parts[1]);
+    } catch { _hyperOSDetected = false; }
+    if (_hyperOSDetected) {
+        document.documentElement.classList.add('hyperos');
+    }
+}
+
 async function loadHome() {
     try { applyHomeData(JSON.parse(localStorage.getItem('nm_home_cache'))); } catch (e) { console.error("Error loading cache:", e); }
+
+    detectAndApplyTheme();
+
+    const NM_MODE_FILE = `${NM_DATA}/nm_mode`;
+    const SUSFS_BIN = `/data/adb/modules/nomount/bin/ksu_susfs`;
 
     const script = `
         uname -r; echo "|||"
@@ -316,15 +335,18 @@ async function loadHome() {
         getprop ro.build.version.release; echo "|||"
         getprop ro.build.version.sdk; echo "|||"
         grep "version=" ${MOD_DIR}/nomount/module.prop | cut -d= -f2; echo "|||"
-        ${NM_BIN} version; echo "|||"
-        ${NM_BIN} rule list --json; echo "|||"
-        if ${NM_BIN} version > /dev/null 2>&1; then lsmod | grep -q nomount && echo lkm || echo built-in; fi
+        ${NM_BIN} version 2>/dev/null; echo "|||"
+        ${NM_BIN} rule list --json 2>/dev/null; echo "|||"
+        cat "${NM_MODE_FILE}" 2>/dev/null || echo "unavailable"; echo "|||"
+        if [ -x "${SUSFS_BIN}" ]; then ${SUSFS_BIN} show 2>/dev/null | head -20; else echo ""; fi; echo "|||"
+        getprop ro.mi.os.version.incremental 2>/dev/null; echo "|||"
     `;
 
     try {
         const parts = (await exec(script)).stdout.split('|||').map(s => s.trim());
         if (!parts[6]) parts[6] = "[]";
         let activeModulesCount = 0;
+        let totalFileCount = 0;
         try {
             const rules = JSON.parse(parts[6]);
             const modCounts = {};
@@ -333,6 +355,7 @@ async function loadHome() {
                     const modName = r.real.split('/')[4];
                     if (modName && modName !== 'nomount') modCounts[modName] = 1;
                 }
+                totalFileCount++;
             });
             activeModulesCount = Object.keys(modCounts).length;
         } catch (e) { console.error("Error parsing rules:", e); }
@@ -346,17 +369,43 @@ async function loadHome() {
               mVer = raw[4] || unk,
               dVer = raw[5] || unk;
 
-        const nmMode = (parts[7] || '').toLowerCase();
+        const nmMode = (parts[7] || 'unavailable').trim();
+        const susfsFull = (parts[8] || '').trim();
+        const isHyperOS = !!(parts[9] || '').trim();
+
+        // SUSFS parsing: look for "susfs: enabled" or version number
+        let sufsStatus = 'inactive';
+        let sufsVersion = '';
+        if (susfsFull) {
+            const vMatch = susfsFull.match(/susfs[:\s]+v?([\d.]+)/i);
+            if (vMatch) { sufsVersion = vMatch[1]; sufsStatus = 'active'; }
+            else if (/enabled|active/i.test(susfsFull)) sufsStatus = 'active';
+        }
+
+        if (isHyperOS && _hyperOSDetected === null) {
+            _hyperOSDetected = true;
+            document.documentElement.classList.add('hyperos');
+        }
+
+        const nmActive = (nmMode === 'built-in' || nmMode === 'lkm');
         const homeData = {
             kernelVer: kVer, deviceModel: model,
             androidInfo: `Android ${aRel} (API ${aSdk})`,
-            versionFull: `${mVer} (${dVer})`,
-            active: dVer !== unk,
-            nmMode
+            versionFull: nmActive ? `${mVer} (${dVer})` : unk,
+            active: nmActive,
+            nmMode,
+            sufsStatus,
+            sufsVersion,
+            totalFileCount,
+            activeModulesCount
         };
 
         requestAnimationFrame(() => {
-            applyHomeData(homeData, activeModulesCount === 1 ? translate('module_injected_count') : translate('modules_injected_count', { count: activeModulesCount }));
+            const statsText = activeModulesCount === 1
+                ? translate('module_injected_count')
+                : translate('modules_injected_count', { count: activeModulesCount });
+            applyHomeData(homeData, nmActive ? statsText : translate('nm_vfs_unavailable'));
+            applySufsStatus(homeData);
             localStorage.setItem('nm_home_cache', JSON.stringify(homeData));
         });
     } catch (e) { console.error("Delayed Home update error:", e); }
@@ -384,6 +433,18 @@ function applyHomeData(data, statsText) {
     if (el.modeBadge) {
         el.modeBadge.textContent = data.nmMode === 'lkm' ? translate('mode_lkm') : data.nmMode === 'built-in' ? translate('mode_builtin') : '';
     }
+}
+
+function applySufsStatus(data) {
+    const panel = document.getElementById('susfs-panel');
+    if (!panel) return;
+    const statusEl = document.getElementById('susfs-status');
+    const versionEl = document.getElementById('susfs-version');
+    const active = data.sufsStatus === 'active';
+    panel.classList.toggle('susfs-active', active);
+    panel.classList.toggle('susfs-inactive', !active);
+    if (statusEl) statusEl.textContent = active ? translate('susfs_active') : translate('susfs_inactive');
+    if (versionEl) versionEl.textContent = data.sufsVersion ? `v${data.sufsVersion}` : '';
 }
 
 // Modules

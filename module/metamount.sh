@@ -46,58 +46,78 @@ fi
 touch "$BOOT_SEMAPHORE"
 
 echo "[INFO] Checking NoMount kernel support..." >> "$LOG_FILE"
+NM_ACTIVE=0
+NM_MODE="unavailable"
+
 if "$LOADER" version > /dev/null 2>&1; then
-    echo "[INFO] Built-in Kernel support detected." >> "$LOG_FILE"
+    echo "[INFO] Built-in kernel NoMount support detected." >> "$LOG_FILE"
+    NM_ACTIVE=1
+    NM_MODE="built-in"
 else
     echo "[INFO] Built-in not found. Attempting to load LKM..." >> "$LOG_FILE"
     if [ -f "$MODDIR/lkm/nomount.ko" ]; then
         load_ko "$MODDIR/lkm/nomount.ko" >> "$LOG_FILE" 2>&1
     fi
 
-    if ! "$LOADER" version > /dev/null 2>&1; then
-        echo "[FATAL] NoMount Internal API is missing/unresponsive." >> "$LOG_FILE"
-        touch "$MODDIR/disable"
-        sed -i "s|^description=.*|description=[❌ ERROR: Kernel not patched or module failed to load] \\\\n$BASE_DESC|" "$PROP_FILE"
-        rm -f "$BOOT_SEMAPHORE"
-        exit 1
+    if "$LOADER" version > /dev/null 2>&1; then
+        echo "[INFO] LKM loaded and initialized correctly." >> "$LOG_FILE"
+        NM_ACTIVE=1
+        NM_MODE="lkm"
+    else
+        echo "[WARN] NoMount VFS not available (stock kernel or LKM load failed)." >> "$LOG_FILE"
+        echo "[INFO] Module will continue in SUSFS-only mode (VFS injection skipped)." >> "$LOG_FILE"
+        NM_ACTIVE=0
+        NM_MODE="unavailable"
     fi
-    echo "[INFO] LKM loaded and initialized correctly." >> "$LOG_FILE"
 fi
-echo "[OK] Internal API responding properly." >> "$LOG_FILE"
 
-for mod_path in "$MODULES_DIR"/*; do
-    [ -d "$mod_path" ] || continue
-    mod_name="${mod_path##*/}"
-    [ "$mod_name" = "nomount" ] && continue
+# Write nm_mode for WebUI detection
+mkdir -p "$NOMOUNT_DATA"
+echo "$NM_MODE" > "$NOMOUNT_DATA/nm_mode"
 
-    if [ -f "$mod_path/disable" ] || [ -f "$mod_path/remove" ] || [ -f "$mod_path/skip_mount" ]; then
-        echo "[SKIP] Module $mod_name is disabled/removed/skipped" >> "$LOG_FILE"; continue
-    fi
+if [ "$NM_ACTIVE" = "1" ]; then
+    echo "[OK] Internal API responding properly." >> "$LOG_FILE"
+fi
 
-    for partition in $TARGET_PARTITIONS; do
-        if [ -d "$mod_path/$partition" ]; then
-            [ -d "/$partition" ] || [ -d "/system/$partition" ] || continue
-            echo "[INFO] Mounting module: $mod_name (/$partition)" >> "$LOG_FILE"
-            find -L "$mod_path/$partition" \( -type d -o -type c -o -name ".replace" \) -exec sh -c '
-                for f do
-                    v="${f#'"$mod_path"'}"; [ "${v#/system/odm/}" != "$v" ] && v="/odm/${v#/system/odm/}"
-                    if [ -d "$f" ]; then getfattr -n trusted.overlay.opaque "$f" 2>/dev/null | grep -q "=\"y\"" && printf "%s\0" "$v"
-                    elif [ "${f##*/}" = ".replace" ]; then printf "%s\0" "${v%/.replace}"
-                    else printf "%s\0" "$v"; fi
-                done
-            ' _ {} + 2>/dev/null | xargs -0 -r "$LOADER" rule add --whiteout >> "$LOG_FILE" 2>&1
+if [ "$NM_ACTIVE" = "1" ]; then
+    for mod_path in "$MODULES_DIR"/*; do
+        [ -d "$mod_path" ] || continue
+        mod_name="${mod_path##*/}"
+        [ "$mod_name" = "nomount" ] && continue
 
-            find -L "$mod_path/$partition" \( -type f -o -type l \) ! -name ".replace" -exec sh -c '
-                for f do
-                    v="${f#'"$mod_path"'}"; [ "${v#/system/odm/}" != "$v" ] && v="/odm/${v#/system/odm/}"
-                    printf "%s\0%s\0" "$v" "$f"
-                done
-            ' _ {} + 2>/dev/null | xargs -0 -r "$LOADER" rule add >> "$LOG_FILE" 2>&1
+        if [ -f "$mod_path/disable" ] || [ -f "$mod_path/remove" ] || [ -f "$mod_path/skip_mount" ]; then
+            echo "[SKIP] Module $mod_name is disabled/removed/skipped" >> "$LOG_FILE"; continue
         fi
-    done
-done
 
-echo "=== Injection Complete: $(date) ===" >> "$LOG_FILE"
+        for partition in $TARGET_PARTITIONS; do
+            if [ -d "$mod_path/$partition" ]; then
+                [ -d "/$partition" ] || [ -d "/system/$partition" ] || continue
+                echo "[INFO] Mounting module: $mod_name (/$partition)" >> "$LOG_FILE"
+                find -L "$mod_path/$partition" \( -type d -o -type c -o -name ".replace" \) -exec sh -c '
+                    for f do
+                        v="${f#'"$mod_path"'}"; [ "${v#/system/odm/}" != "$v" ] && v="/odm/${v#/system/odm/}"
+                        if [ -d "$f" ]; then getfattr -n trusted.overlay.opaque "$f" 2>/dev/null | grep -q "=\"y\"" && printf "%s\0" "$v"
+                        elif [ "${f##*/}" = ".replace" ]; then printf "%s\0" "${v%/.replace}"
+                        else printf "%s\0" "$v"; fi
+                    done
+                ' _ {} + 2>/dev/null | xargs -0 -r "$LOADER" rule add --whiteout >> "$LOG_FILE" 2>&1
+
+                find -L "$mod_path/$partition" \( -type f -o -type l \) ! -name ".replace" -exec sh -c '
+                    for f do
+                        v="${f#'"$mod_path"'}"; [ "${v#/system/odm/}" != "$v" ] && v="/odm/${v#/system/odm/}"
+                        printf "%s\0%s\0" "$v" "$f"
+                    done
+                ' _ {} + 2>/dev/null | xargs -0 -r "$LOADER" rule add >> "$LOG_FILE" 2>&1
+            fi
+        done
+    done
+
+    echo "=== Injection Complete: $(date) ===" >> "$LOG_FILE"
+    echo -e "\nCurrent files injected:" >> "$LOG_FILE"
+    "$LOADER" rule list >> "$LOG_FILE"
+else
+    echo "=== VFS injection skipped (NoMount unavailable) ===" >> "$LOG_FILE"
+fi
 
 # ==========================================
 # SUSFS Root Hiding Automation
@@ -134,8 +154,5 @@ fi
 # rm -f "$BOOT_SEMAPHORE"
 # echo "[OK] Boot phase completed safely." >> "$LOG_FILE"
 sed -i "s|^description=.*|description=$BASE_DESC|" "$PROP_FILE"
-
-echo -e "\nCurrent files injected:" >> "$LOG_FILE"
-"$LOADER" rule list >> "$LOG_FILE"
 
 exit 0
