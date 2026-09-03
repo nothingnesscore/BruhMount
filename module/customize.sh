@@ -1,7 +1,7 @@
 ui_print " "
 ui_print "======================================="
-ui_print "               NoMount                 "
-ui_print "  Native Kernel Injection Metamodule   "
+ui_print "               BruhMount               "
+ui_print "  NoMount VFS + Built-in SUSFS Metamodule   "
 ui_print "======================================="
 ui_print " "
 
@@ -25,7 +25,7 @@ mv "$MODPATH/bin/nm-$ARCH" "$MODPATH/bin/nm"
 set_perm "$MODPATH/bin/nm" 0 0 0755
 
 mkdir -p "/data/adb/$ROOT_IMP/bin"
-if ln -sf "/data/adb/modules/nomount/bin/nm" "/data/adb/$ROOT_IMP/bin/nm"; then
+if ln -sf "/data/adb/modules/bruhmount/bin/nm" "/data/adb/$ROOT_IMP/bin/nm"; then
     ui_print "- Symlink created."
 else
     ui_print "! Failed to create 'nm' symlink, skipping.."
@@ -39,7 +39,15 @@ fi
 
 mv "$MODPATH/bin/ko-loader-$ARCH" "$MODPATH/loader"
 set_perm "$MODPATH/loader" 0 0 0755
-rm -rf "$MODPATH"/bin/nm-* "$MODPATH"/bin/ko-loader-*
+
+if [ -f "$MODPATH/bin/ksu_susfs-$ARCH" ]; then
+  mv "$MODPATH/bin/ksu_susfs-$ARCH" "$MODPATH/bin/ksu_susfs"
+  set_perm "$MODPATH/bin/ksu_susfs" 0 0 0755
+  ln -sf "$MODPATH/bin/ksu_susfs" "/data/adb/$ROOT_IMP/bin/ksu_susfs" 2>/dev/null || true
+  ui_print "- Built-in SUSFS CLI tool provisioned."
+fi
+
+rm -rf "$MODPATH"/bin/nm-* "$MODPATH"/bin/ko-loader-* "$MODPATH"/bin/ksu_susfs-*
 
 load_ko() {
   if [ "$USE_KSUD" = true ]; then
@@ -56,7 +64,7 @@ load_ko() {
   return 0
 }
 
-OLD_MODPATH="/data/adb/modules/nomount"
+OLD_MODPATH="/data/adb/modules/bruhmount"
 KVER=$(uname -r | cut -d'.' -f1,2)
 AKVER=$(uname -r | grep -oE 'android[0-9]+')
 

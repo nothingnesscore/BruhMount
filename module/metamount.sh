@@ -99,6 +99,37 @@ done
 
 echo "=== Injection Complete: $(date) ===" >> "$LOG_FILE"
 
+# ==========================================
+# SUSFS Root Hiding Automation
+# ==========================================
+SUSFS_BIN="$MODDIR/bin/ksu_susfs"
+if [ -x "$SUSFS_BIN" ] && "$SUSFS_BIN" show 2>/dev/null | grep -q "susfs:"; then
+    echo "[INFO] SUSFS kernel support detected. Applying security rules..." >> "$LOG_FILE"
+
+    # 1. Hide core root and module directories
+    for p in /data/adb /data/adb/modules /data/adb/ksu /data/adb/ap /data/adb/magisk /data/local/tmp; do
+        [ -e "$p" ] && "$SUSFS_BIN" add_sus_path "$p" >> "$LOG_FILE" 2>&1
+    done
+
+    # 2. Hide each active module path
+    for mod_path in "$MODULES_DIR"/*; do
+        [ -d "$mod_path" ] && "$SUSFS_BIN" add_sus_path "$mod_path" >> "$LOG_FILE" 2>&1
+    done
+
+    # 3. Hide injected Zygisk and module shared libraries from /proc/self/maps
+    find -L "$MODULES_DIR" -type f -name "*.so" 2>/dev/null | while read -r lib; do
+        "$SUSFS_BIN" add_sus_map "$lib" >> "$LOG_FILE" 2>&1
+    done
+
+    # 4. Enable AVC denial log spoofing
+    "$SUSFS_BIN" enable_avc_log_spoofing 1 >> "$LOG_FILE" 2>&1
+
+    # NOTE: hide_sus_mnts_for_non_su_procs is intentionally omitted because
+    # NoMount operates via in-memory VFS redirection with zero mount table footprint.
+    echo "[OK] SUSFS hiding rules applied successfully." >> "$LOG_FILE"
+fi
+
+
 # NOTE: moved to boot-completed.sh
 # rm -f "$BOOT_SEMAPHORE"
 # echo "[OK] Boot phase completed safely." >> "$LOG_FILE"

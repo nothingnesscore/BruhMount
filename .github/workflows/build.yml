@@ -56,6 +56,20 @@ jobs:
           mkdir -p ../module/bin
           mv nm-* ../module/bin/
 
+      
+      - name: compile ksu_susfs via zigcc
+        run: |
+          cd userspace/susfs_src
+          zig cc -target aarch64-linux-musl -D_GNU_SOURCE -Oz -static -Iincludes -I. \
+            main.c susfs_utils.c features/*.c -o ../../bin/ksu_susfs-arm64
+          zig cc -target arm-linux-musleabihf -D_GNU_SOURCE -Oz -static -Iincludes -I. \
+            main.c susfs_utils.c features/*.c -o ../../bin/ksu_susfs-arm
+          cd ../../bin
+          ../sstrip -z ksu_susfs-arm64
+          ../sstrip -z ksu_susfs-arm
+          file ksu_susfs-*
+          mv ksu_susfs-* ../module/bin/
+
       - name: compile ko-loader via zigcc
         run: |
           git clone https://github.com/maxsteeel/ko-loader.git ko_loader_src
