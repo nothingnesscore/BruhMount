@@ -487,3 +487,94 @@ md-icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
 
 /* Inline flex for SUSFS value row */
 #susfs-panel .info-value { display: flex; align-items: center; gap: 0; }
+
+.clickable { cursor: pointer; user-select: none; }
+.clickable:active { opacity: 0.8; }
+.row-arrow { color: var(--md-sys-color-on-surface-variant); opacity: 0.5; font-size: 20px; justify-self: end; }
+
+/* SUSFS Diagnostics Modal */
+.susfs-dialog {
+    max-width: 440px; width: 92vw; max-height: 85vh;
+    border-radius: 24px; padding: 20px;
+    overflow-y: auto; display: flex; flex-direction: column; gap: 14px;
+}
+
+.susfs-diag-body {
+    display: flex; flex-direction: column; gap: 10px;
+}
+
+.diag-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid rgba(128, 128, 128, 0.12);
+}
+
+.diag-label {
+    font-size: 13px; color: var(--md-sys-color-on-surface-variant); font-weight: 500;
+}
+
+.diag-value {
+    font-size: 13px; font-weight: 600; color: var(--md-sys-color-on-surface);
+}
+
+.diag-badge {
+    font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+}
+
+.diag-badge.active {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+    color: var(--md-sys-color-primary);
+}
+
+.diag-badge.inactive {
+    background: color-mix(in srgb, var(--md-sys-color-error) 18%, transparent);
+    color: var(--md-sys-color-error);
+}
+
+.diag-section-header {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--md-sys-color-primary);
+    margin-top: 8px; margin-bottom: 4px;
+}
+
+.feature-chips-container {
+    display: flex; flex-wrap: wrap; gap: 6px;
+}
+
+.feature-chip {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 600; padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+    border: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.diag-raw-details {
+    margin-top: 8px; border-radius: 12px;
+    background: var(--md-sys-color-surface-container);
+    overflow: hidden; border: 1px solid rgba(128, 128, 128, 0.12);
+}
+
+.diag-raw-summary {
+    padding: 10px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer; color: var(--md-sys-color-primary);
+    user-select: none;
+}
+
+.diag-raw-pre {
+    margin: 0; padding: 12px; font-size: 11px;
+    font-family: monospace; overflow-x: auto;
+    background: rgba(0, 0, 0, 0.2); white-space: pre-wrap;
+    word-break: break-all; color: var(--md-sys-color-on-surface);
+    max-height: 200px; overflow-y: auto;
+}
+
+#btn-refresh-susfs {
+    margin-top: 12px; margin-bottom: 8px;
+}
+
+#susfs-auto-badge {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+    color: var(--md-sys-color-primary);
+    font-weight: 600; padding: 3px 8px; border-radius: 6px; font-size: 12px;
+}

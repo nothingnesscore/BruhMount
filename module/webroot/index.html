@@ -41,7 +41,7 @@
                         </div>
                     </div>
 
-                    <div class="home-segment-row" id="susfs-panel">
+                    <div class="home-segment-row clickable" id="susfs-panel" role="button" tabindex="0" title="Tap for SUSFS diagnostics">
                         <div class="segment-icon"><md-icon>shield</md-icon></div>
                         <div class="info-data">
                             <span class="info-label" data-i18n="susfs_label">SUSFS</span>
@@ -50,6 +50,7 @@
                                 <span id="susfs-version" class="susfs-version-badge"></span>
                             </span>
                         </div>
+                        <md-icon class="row-arrow">chevron_right</md-icon>
                     </div>
                 </div>
 
@@ -124,7 +125,54 @@
                             <div class="custom-select-menu" id="lang-select-menu"></div>
                         </div>
                     </div>
+
+                    <div class="segment-card setting-item" id="theme-setting-card">
+                        <div class="setting-text">
+                            <h3 data-i18n="theme_label">Interface Theme</h3>
+                            <p data-i18n="theme_desc">Switch between HyperOS MiuiX and Material 3</p>
+                        </div>
+                        
+                        <div class="custom-select-wrapper" id="theme-select-wrapper">
+                            <div class="custom-select-trigger" id="theme-select-trigger">
+                                <span id="theme-select-value">Auto</span>
+                                <md-icon class="dropdown-arrow">arrow_drop_down</md-icon>
+                            </div>
+                            <div class="custom-select-menu" id="theme-select-menu">
+                                <div class="custom-select-option" data-theme="auto" data-i18n="theme_auto">Auto (Detect)</div>
+                                <div class="custom-select-option" data-theme="miuix" data-i18n="theme_miuix">MiuiX (HyperOS)</div>
+                                <div class="custom-select-option" data-theme="md3" data-i18n="theme_md3">Material Design 3</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="segment-section-label" data-i18n="susfs_security_title">SUSFS Security</div>
+                <div class="settings-segment-group">
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="susfs_avc_spoof">SELinux AVC Spoofing</h3>
+                            <p data-i18n="susfs_avc_spoof_desc">Spoof audit logs to prevent root detection</p>
+                        </div>
+                        <label class="custom-switch" id="setting-susfs-avc">
+                            <input type="checkbox" class="switch-input" aria-label="SELinux AVC Spoofing" checked>
+                            <span class="switch-track">
+                                <span class="switch-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="susfs_auto_hide">Automated Protection</h3>
+                            <p data-i18n="susfs_auto_hide_desc">Auto-hide root & module paths on boot</p>
+                        </div>
+                        <span class="system-chip" id="susfs-auto-badge">Active</span>
+                    </div>
+                </div>
+
+                <button class="custom-tonal-btn secondary" id="btn-refresh-susfs" data-i18n="susfs_refresh_rules">
+                    Refresh SUSFS Rules
+                </button>
 
                 <button class="custom-tonal-btn error" id="btn-clear-rules" data-i18n="clear_rules">
                     Clear all rules
@@ -212,6 +260,51 @@
                 <div id="app-list-container" class="app-list">
                     <div class="loading-spinner" data-i18n="loading_apps">Loading apps...</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="susfs-diag-modal" class="modal-overlay">
+        <div class="md-dialog susfs-dialog">
+            <div class="modal-header">
+                <h3 data-i18n="susfs_modal_title">SUSFS Diagnostics</h3>
+                <md-icon-button id="btn-close-susfs-modal" aria-label="Close">
+                    <md-icon>close</md-icon>
+                </md-icon-button>
+            </div>
+            <div class="susfs-diag-body">
+                <div class="diag-row">
+                    <span class="diag-label">Kernel Subsystem</span>
+                    <span class="diag-badge" id="diag-susfs-status">Checking...</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Driver Version</span>
+                    <span class="diag-value" id="diag-susfs-version">-</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Kernel Variant</span>
+                    <span class="diag-value" id="diag-susfs-variant">-</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">AVC Denial Spoofing</span>
+                    <span class="diag-value" id="diag-susfs-avc">Active</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Mount Footprint</span>
+                    <span class="diag-value">0 mounts (In-memory VFS)</span>
+                </div>
+                <div class="diag-section-header">Enabled Kernel Features</div>
+                <div id="diag-susfs-features" class="feature-chips-container">
+                    <span class="feature-chip">CONFIG_KSU_SUSFS</span>
+                </div>
+                <details class="diag-raw-details">
+                    <summary class="diag-raw-summary">Raw Output (ksu_susfs show)</summary>
+                    <pre id="diag-raw-output" class="diag-raw-pre">Checking kernel...</pre>
+                </details>
+            </div>
+            <div class="md-dialog-actions">
+                <button class="btn-text" id="btn-diag-refresh">Re-check</button>
+                <button class="btn-text" id="btn-diag-close">Close</button>
             </div>
         </div>
     </div>

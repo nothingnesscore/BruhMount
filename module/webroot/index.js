@@ -167,6 +167,9 @@ const ICON_PATHS = {
     account_tree: 'M600-200v-40h-80q-33 0-56.5-23.5T440-320v-320h-80v40q0 33-23.5 56.5T280-520H160q-33 0-56.5-23.5T80-600v-160q0-33 23.5-56.5T160-840h120q33 0 56.5 23.5T360-760v40h240v-40q0-33 23.5-56.5T680-840h120q33 0 56.5 23.5T880-760v160q0 33-23.5 56.5T800-520H680q-33 0-56.5-23.5T600-600v-40h-80v320h80v-40q0-33 23.5-56.5T680-440h120q33 0 56.5 23.5T880-360v160q0 33-23.5 56.5T800-120H680q-33 0-56.5-23.5T600-200ZM160-760v160-160Zm520 400v160-160Zm0-400v160-160Zm0 160h120v-160H680v160Zm0 400h120v-160H680v160ZM160-600h120v-160H160v160Z',
     add: 'M440-440H240q-17 0-28.5-11.5T200-480q0-17 11.5-28.5T240-520h200v-200q0-17 11.5-28.5T480-760q17 0 28.5 11.5T520-720v200h200q17 0 28.5 11.5T760-480q0 17-11.5 28.5T720-440H520v200q0 17-11.5 28.5T480-200q-17 0-28.5-11.5T440-240v-200Z',
     arrow_drop_down: 'M480-360 280-560h400L480-360Z',
+    chevron_right: 'M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z',
+    palette: 'M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-84 31.5-156.5T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 126.5T880-480q0 83-31.5 155.5T763-198q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z',
+    security: 'M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Z',
     check_circle: 'm424-408-86-86q-11-11-28-11t-28 11q-11 11-11 28t11 28l114 114q12 12 28 12t28-12l226-226q11-11 11-28t-11-28q-11-11-28-11t-28 11L424-408Zm56 328q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z',
     close: 'M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z',
     delete: 'M280-120q-33 0-56.5-23.5T200-200v-520q-17 0-28.5-11.5T160-760q0-17 11.5-28.5T200-800h160q0-17 11.5-28.5T400-840h160q17 0 28.5 11.5T600-800h160q17 0 28.5 11.5T800-760q0 17-11.5 28.5T760-720v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM428.5-291.5Q440-303 440-320v-280q0-17-11.5-28.5T400-640q-17 0-28.5 11.5T360-600v280q0 17 11.5 28.5T400-280q17 0 28.5-11.5Zm160 0Q600-303 600-320v-280q0-17-11.5-28.5T560-640q-17 0-28.5 11.5T520-600v280q0 17 11.5 28.5T560-280q17 0 28.5-11.5ZM280-720v520-520Z',
@@ -325,25 +328,107 @@ function initNavigation() {
     });
 }
 
-// Home
-let _hyperOSDetected = null; // null = unchecked, true/false = result
+// Theme Engine & HyperOS Detection
+let _isHyperOS = null;
 
-async function detectAndApplyTheme() {
-    if (_hyperOSDetected !== null) return;
+async function detectHyperOS() {
+    if (_isHyperOS !== null) return _isHyperOS;
     try {
-        const r = await exec(`getprop ro.mi.os.version.incremental 2>/dev/null; echo "|||"; getprop ro.miui.ui.version.name 2>/dev/null`);
-        const parts = r.stdout.split('|||').map(s => s.trim());
-        _hyperOSDetected = !!(parts[0] || parts[1]);
-    } catch { _hyperOSDetected = false; }
-    if (_hyperOSDetected) {
+        const script = `
+            getprop ro.mi.os.version.name 2>/dev/null; echo "|||"
+            getprop ro.miui.ui.version.name 2>/dev/null; echo "|||"
+            getprop ro.miui.ui.version.code 2>/dev/null; echo "|||"
+            getprop ro.product.manufacturer 2>/dev/null; echo "|||"
+            getprop ro.product.brand 2>/dev/null; echo "|||"
+            getprop ro.build.version.incremental 2>/dev/null; echo "|||"
+        `;
+        const { stdout } = await exec(script);
+        const [osVer, miuiVer, miuiCode, mfg, brand, incr] = (stdout || '').split('|||').map(s => (s || '').trim().toLowerCase());
+
+        _isHyperOS = !!(
+            (osVer && osVer.length > 0) ||
+            (miuiVer && miuiVer.length > 0) ||
+            (miuiCode && miuiCode.length > 0) ||
+            (mfg === 'xiaomi') ||
+            (brand === 'xiaomi' || brand === 'redmi' || brand === 'poco') ||
+            (incr && (incr.startsWith('os1.') || incr.includes('miui') || incr.includes('hyperos')))
+        );
+    } catch {
+        _isHyperOS = false;
+    }
+    localStorage.setItem('nm_is_hyperos', _isHyperOS ? '1' : '0');
+    return _isHyperOS;
+}
+
+function applyTheme(themeKey) {
+    const pref = themeKey || localStorage.getItem('nm_theme') || 'auto';
+    let isMiuiX = false;
+    if (pref === 'miuix') {
+        isMiuiX = true;
+    } else if (pref === 'md3') {
+        isMiuiX = false;
+    } else {
+        isMiuiX = _isHyperOS !== null ? _isHyperOS : (localStorage.getItem('nm_is_hyperos') === '1');
+    }
+
+    if (isMiuiX) {
         document.documentElement.classList.add('hyperos');
+        document.documentElement.setAttribute('data-theme', 'miuix');
+    } else {
+        document.documentElement.classList.remove('hyperos');
+        document.documentElement.setAttribute('data-theme', 'md3');
+    }
+}
+
+// SUSFS Live Diagnostics Engine
+let susfsCache = {
+    active: false,
+    version: '',
+    variant: 'GKI',
+    avcSpoof: true,
+    features: [],
+    raw: ''
+};
+
+async function querySusfs() {
+    try {
+        const script = `
+            if [ -x "${SUSFS_BIN}" ]; then
+                ${SUSFS_BIN} show version 2>/dev/null || echo ""; echo "|||"
+                ${SUSFS_BIN} show variant 2>/dev/null || echo ""; echo "|||"
+                ${SUSFS_BIN} show enabled_features 2>/dev/null || echo ""; echo "|||"
+                ${SUSFS_BIN} show 2>/dev/null || echo ""; echo "|||"
+            else
+                echo ""; echo "|||"; echo ""; echo "|||"; echo ""; echo "|||"; echo ""; echo "|||"
+            fi
+        `;
+        const { stdout } = await exec(script);
+        const [ver, variant, features, rawHelp] = (stdout || '').split('|||').map(s => (s || '').trim());
+
+        const active = !!(ver && !ver.includes('NOT_SUPPORTED') && !ver.includes('error'));
+        const featureList = features ? features.split('\n').map(f => f.trim()).filter(Boolean) : [];
+
+        susfsCache = {
+            active,
+            version: active ? (ver.startsWith('v') ? ver : `v${ver}`) : '',
+            variant: active ? (variant || 'GKI') : '',
+            avcSpoof: true,
+            features: featureList,
+            raw: [ver ? `Version: ${ver}` : '', variant ? `Variant: ${variant}` : '', features, rawHelp].filter(Boolean).join('\n\n')
+        };
+        return susfsCache;
+    } catch (e) {
+        susfsCache = { active: false, version: '', variant: '', avcSpoof: false, features: [], raw: e?.message || '' };
+        return susfsCache;
     }
 }
 
 async function loadHome() {
     try { applyHomeData(JSON.parse(localStorage.getItem('nm_home_cache'))); } catch (e) { console.error("Error loading cache:", e); }
 
-    detectAndApplyTheme();
+    // Run theme detection & apply
+    await detectHyperOS();
+    applyTheme(localStorage.getItem('nm_theme') || 'auto');
 
     const NM_MODE_FILE = `${NM_DATA}/nm_mode`;
 
@@ -356,8 +441,7 @@ async function loadHome() {
         ${NM_BIN} version 2>/dev/null; echo "|||"
         ${NM_BIN} rule list --json 2>/dev/null; echo "|||"
         cat "${NM_MODE_FILE}" 2>/dev/null || echo "unavailable"; echo "|||"
-        if [ -x "${SUSFS_BIN}" ]; then ${SUSFS_BIN} show 2>/dev/null | head -20; else echo ""; fi; echo "|||"
-        getprop ro.mi.os.version.incremental 2>/dev/null; echo "|||"
+        if [ -x "${SUSFS_BIN}" ]; then ${SUSFS_BIN} show version 2>/dev/null || ${SUSFS_BIN} show 2>/dev/null | head -5; else echo ""; fi; echo "|||"
     `;
 
     try {
@@ -388,21 +472,16 @@ async function loadHome() {
               dVer = raw[5] || unk;
 
         const nmMode = (parts[7] || 'unavailable').trim();
-        const susfsFull = (parts[8] || '').trim();
-        const isHyperOS = !!(parts[9] || '').trim();
+        const susfsRaw = (parts[8] || '').trim();
 
-        // SUSFS parsing: look for "susfs: enabled" or version number
-        let sufsStatus = 'inactive';
-        let sufsVersion = '';
-        if (susfsFull) {
-            const vMatch = susfsFull.match(/susfs[:\s]+v?([\d.]+)/i);
-            if (vMatch) { sufsVersion = vMatch[1]; sufsStatus = 'active'; }
-            else if (/enabled|active/i.test(susfsFull)) sufsStatus = 'active';
-        }
+        // Query detailed SUSFS status in parallel
+        await querySusfs();
 
-        if (isHyperOS && _hyperOSDetected === null) {
-            _hyperOSDetected = true;
-            document.documentElement.classList.add('hyperos');
+        let sufsStatus = susfsCache.active ? 'active' : 'inactive';
+        let sufsVersion = susfsCache.version || '';
+        if (!susfsCache.active && susfsRaw) {
+            const vMatch = susfsRaw.match(/v?([\d.]+)/i);
+            if (vMatch) { sufsVersion = `v${vMatch[1]}`; sufsStatus = 'active'; susfsCache.active = true; }
         }
 
         const nmActive = (nmMode === 'built-in' || nmMode === 'lkm');
@@ -458,11 +537,75 @@ function applySufsStatus(data) {
     if (!panel) return;
     const statusEl = document.getElementById('susfs-status');
     const versionEl = document.getElementById('susfs-version');
-    const active = data.sufsStatus === 'active';
+    const active = data.sufsStatus === 'active' || susfsCache.active;
     panel.classList.toggle('susfs-active', active);
     panel.classList.toggle('susfs-inactive', !active);
     if (statusEl) statusEl.textContent = active ? translate('susfs_active') : translate('susfs_inactive');
-    if (versionEl) versionEl.textContent = data.sufsVersion ? `v${data.sufsVersion}` : '';
+    const displayVer = data.sufsVersion || susfsCache.version || '';
+    if (versionEl) versionEl.textContent = displayVer ? (displayVer.startsWith('v') ? displayVer : `v${displayVer}`) : '';
+
+    panel.onclick = () => openSusfsDiagModal();
+}
+
+function openSusfsDiagModal() {
+    const modal = document.getElementById('susfs-diag-modal');
+    if (!modal) return;
+
+    const statusEl = document.getElementById('diag-susfs-status');
+    if (statusEl) {
+        statusEl.textContent = susfsCache.active ? 'Kernel Subsystem Active' : 'Inactive / Not Detected';
+        statusEl.className = `diag-badge ${susfsCache.active ? 'active' : 'inactive'}`;
+    }
+
+    const verEl = document.getElementById('diag-susfs-version');
+    if (verEl) verEl.textContent = susfsCache.version || translate('unknown_value');
+
+    const variantEl = document.getElementById('diag-susfs-variant');
+    if (variantEl) variantEl.textContent = susfsCache.variant || 'GKI';
+
+    const avcEl = document.getElementById('diag-susfs-avc');
+    if (avcEl) avcEl.textContent = susfsCache.avcSpoof ? 'Active (u:r:priv_app)' : 'Disabled';
+
+    const featContainer = document.getElementById('diag-susfs-features');
+    if (featContainer) {
+        featContainer.replaceChildren();
+        if (susfsCache.features.length > 0) {
+            susfsCache.features.forEach(f => {
+                const chip = document.createElement('span');
+                chip.className = 'feature-chip';
+                chip.textContent = f.replace(/^CONFIG_KSU_SUSFS_/, '').replace(/=y$/, '');
+                chip.title = f;
+                featContainer.appendChild(chip);
+            });
+        } else {
+            const fallback = document.createElement('span');
+            fallback.className = 'feature-chip';
+            fallback.textContent = susfsCache.active ? 'CONFIG_KSU_SUSFS' : 'None';
+            featContainer.appendChild(fallback);
+        }
+    }
+
+    const pre = document.getElementById('diag-raw-output');
+    if (pre) pre.textContent = susfsCache.raw || 'No raw output from ksu_susfs.';
+
+    modal.classList.add('active');
+
+    const closeBtn = document.getElementById('btn-close-susfs-modal');
+    if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
+
+    const diagCloseBtn = document.getElementById('btn-diag-close');
+    if (diagCloseBtn) diagCloseBtn.onclick = () => modal.classList.remove('active');
+
+    const refreshBtn = document.getElementById('btn-diag-refresh');
+    if (refreshBtn) {
+        refreshBtn.onclick = async () => {
+            showToast('Re-checking kernel SUSFS...');
+            await querySusfs();
+            openSusfsDiagModal();
+        };
+    }
+
+    modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
 }
 
 // Modules
@@ -865,14 +1008,95 @@ async function addExclusion(uid, label, pkg) {
     await loadExclusions();
 }
 
+function renderThemePicker() {
+    const wrapper = document.getElementById('theme-select-wrapper');
+    const valueDisplay = document.getElementById('theme-select-value');
+    const menu = document.getElementById('theme-select-menu');
+    if (!wrapper || !valueDisplay || !menu) return;
+
+    const currentPref = localStorage.getItem('nm_theme') || 'auto';
+    const THEME_NAMES = {
+        auto: translate('theme_auto') || 'Auto (Detect)',
+        miuix: translate('theme_miuix') || 'MiuiX (HyperOS)',
+        md3: translate('theme_md3') || 'Material Design 3'
+    };
+
+    valueDisplay.textContent = THEME_NAMES[currentPref] || THEME_NAMES.auto;
+
+    menu.replaceChildren();
+    for (const key of ['auto', 'miuix', 'md3']) {
+        const opt = document.createElement('div');
+        opt.className = `custom-select-option ${key === currentPref ? 'selected' : ''}`;
+        opt.textContent = THEME_NAMES[key];
+        opt.onclick = (e) => {
+            e.stopPropagation();
+            wrapper.classList.remove('open');
+            localStorage.setItem('nm_theme', key);
+            valueDisplay.textContent = THEME_NAMES[key];
+            applyTheme(key);
+            renderThemePicker();
+        };
+        menu.appendChild(opt);
+    }
+
+    if (!wrapper.dataset.listenerAttached) {
+        const trigger = document.getElementById('theme-select-trigger');
+        if (trigger) {
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                wrapper.classList.toggle('open');
+            };
+        }
+        document.addEventListener('click', () => wrapper.classList.remove('open'));
+        wrapper.dataset.listenerAttached = 'true';
+    }
+}
+
 // Options
 async function loadOptions() {
+    renderThemePicker();
+
     const swSafe = document.querySelector('#setting-safemode input'),
-          btnClear = document.getElementById('btn-clear-rules');
+          btnClear = document.getElementById('btn-clear-rules'),
+          swAvc = document.querySelector('#setting-susfs-avc input'),
+          btnRefreshSusfs = document.getElementById('btn-refresh-susfs');
 
     if (swSafe) {
         swSafe.checked = (await exec(`[ -f ${FILES.disable} ] && echo yes`)).stdout.includes('yes');
         swSafe.onchange = e => exec(e.target.checked ? `touch ${FILES.disable}` : `rm ${FILES.disable}`);
+    }
+
+    if (swAvc) {
+        swAvc.checked = susfsCache.avcSpoof;
+        swAvc.onchange = async (e) => {
+            const val = e.target.checked ? '1' : '0';
+            await exec(`${SUSFS_BIN} enable_avc_log_spoofing ${val} 2>/dev/null`);
+            susfsCache.avcSpoof = e.target.checked;
+            showToast(`AVC log spoofing: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+        };
+    }
+
+    if (btnRefreshSusfs) {
+        btnRefreshSusfs.onclick = async () => {
+            showToast('Applying SUSFS security rules...');
+            const refreshScript = `
+                if [ -x "${SUSFS_BIN}" ]; then
+                    for p in /data/adb /data/adb/modules /data/adb/ksu /data/adb/ap /data/adb/magisk /data/local/tmp; do
+                        [ -e "$p" ] && "${SUSFS_BIN}" add_sus_path "$p" 2>/dev/null
+                    done
+                    for m in /data/adb/modules/*; do
+                        [ -d "$m" ] && "${SUSFS_BIN}" add_sus_path "$m" 2>/dev/null
+                    done
+                    find -L /data/adb/modules -type f -name "*.so" 2>/dev/null | while read -r lib; do
+                        "${SUSFS_BIN}" add_sus_map "$lib" 2>/dev/null
+                    done
+                    "${SUSFS_BIN}" enable_avc_log_spoofing 1 2>/dev/null
+                fi
+            `;
+            await exec(refreshScript);
+            await querySusfs();
+            showToast(translate('susfs_refresh_done') || 'SUSFS rules refreshed successfully!');
+        };
     }
 
     if (btnClear) {
@@ -1224,6 +1448,7 @@ function initScrollListener() {
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
+    applyTheme(localStorage.getItem('nm_theme') || 'auto');
     await initModulePaths();
     await setAppLocale((localStorage.getItem('nm_locale') || navigator.language || 'en').split('-')[0], false);
     applyIcons();

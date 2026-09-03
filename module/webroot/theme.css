@@ -61,65 +61,127 @@
 
 /* ===================================================
  * HyperOS / MiuiX Theme
- * Applied when html.hyperos class is present
+ * Applied when html.hyperos or [data-theme="miuix"] is present
  * =================================================== */
-html.hyperos {
-    --md-sys-color-primary: #0093d5;
-    --md-sys-color-on-primary: #ffffff;
-    --md-sys-color-primary-container: #d0eeff;
-    --md-sys-color-on-primary-container: #001e30;
-    --md-sys-color-secondary-container: #d6eaf5;
-    --md-sys-color-on-secondary-container: #0d3347;
-    --md-sys-color-background: #f2f6fa;
-    --md-sys-color-surface: #f2f6fa;
-    --md-sys-color-on-surface: #181c20;
-    --md-sys-color-surface-container: #ffffff;
-    --md-sys-color-surface-container-high: #eaf2f8;
-    --md-sys-color-surface-container-highest: #dceef8;
-    --md-sys-color-on-surface-variant: #3d5060;
-    --md-sys-color-outline: #8eacbe;
-    --nm-font-family: 'MiSans', 'HarmonyOS Sans', system-ui, sans-serif;
-    --nm-segment-inner-corner: 12px;
+html.hyperos,
+html[data-theme="miuix"] {
+    --md-sys-color-primary: #007aff !important;
+    --md-sys-color-on-primary: #ffffff !important;
+    --md-sys-color-primary-container: #d9ebff !important;
+    --md-sys-color-on-primary-container: #002b66 !important;
+    --md-sys-color-secondary-container: #e6f0fa !important;
+    --md-sys-color-on-secondary-container: #003666 !important;
+    --md-sys-color-background: #f2f3f5 !important;
+    --md-sys-color-surface: #f2f3f5 !important;
+    --md-sys-color-on-surface: #111111 !important;
+    --md-sys-color-surface-container: #ffffff !important;
+    --md-sys-color-surface-container-high: #ebecef !important;
+    --md-sys-color-surface-container-highest: #e0e2e6 !important;
+    --md-sys-color-on-surface-variant: #6b6e75 !important;
+    --md-sys-color-outline: #8e929b !important;
+    --nm-font-family: 'MiSans', 'HarmonyOS Sans', system-ui, -apple-system, sans-serif !important;
+    --nm-segment-inner-corner: 14px;
     --nm-segment-outer-corner: 20px;
     color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-    html.hyperos {
-        --md-sys-color-primary: #4dc9ff;
-        --md-sys-color-on-primary: #003450;
-        --md-sys-color-primary-container: #004e72;
-        --md-sys-color-on-primary-container: #c4e8ff;
-        --md-sys-color-secondary-container: #1a3d52;
-        --md-sys-color-on-secondary-container: #c0dbed;
-        --md-sys-color-background: #0e1519;
-        --md-sys-color-surface: #0e1519;
-        --md-sys-color-on-surface: #d8e8f0;
-        --md-sys-color-surface-container: #141d22;
-        --md-sys-color-surface-container-high: #1c2830;
-        --md-sys-color-surface-container-highest: #22333e;
-        --md-sys-color-on-surface-variant: #9ab7c8;
-        --md-sys-color-outline: #4d7084;
+    html.hyperos,
+    html[data-theme="miuix"] {
+        --md-sys-color-primary: #3482ff !important;
+        --md-sys-color-on-primary: #001f4d !important;
+        --md-sys-color-primary-container: #004499 !important;
+        --md-sys-color-on-primary-container: #c7deff !important;
+        --md-sys-color-secondary-container: #162436 !important;
+        --md-sys-color-on-secondary-container: #bdd7f5 !important;
+        --md-sys-color-background: #000000 !important;
+        --md-sys-color-surface: #000000 !important;
+        --md-sys-color-on-surface: #f0f1f3 !important;
+        --md-sys-color-surface-container: #161719 !important;
+        --md-sys-color-surface-container-high: #202124 !important;
+        --md-sys-color-surface-container-highest: #2a2b2e !important;
+        --md-sys-color-on-surface-variant: #8e9096 !important;
+        --md-sys-color-outline: #5c5e64 !important;
         color-scheme: dark;
     }
 }
 
-/* Glassmorphism accent for HyperOS status card */
-html.hyperos .home-status-card {
-    background: linear-gradient(135deg,
-        color-mix(in srgb, var(--md-sys-color-primary) 18%, var(--md-sys-color-secondary-container)) 0%,
-        var(--md-sys-color-secondary-container) 100%);
-    border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
+/* MiuiX Distinct Card & Group Styling */
+html.hyperos .card,
+html.hyperos .home-status-card,
+html.hyperos .home-segment-group,
+html.hyperos .settings-segment-group,
+html[data-theme="miuix"] .card,
+html[data-theme="miuix"] .home-status-card,
+html[data-theme="miuix"] .home-segment-group,
+html[data-theme="miuix"] .settings-segment-group {
+    border-radius: 20px !important;
+    border: 1px solid rgba(128, 128, 128, 0.12) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
 }
 
-html.hyperos .home-status-card.inactive {
-    background: linear-gradient(135deg,
-        color-mix(in srgb, var(--md-sys-color-error) 12%, var(--md-sys-color-error-container)) 0%,
-        var(--md-sys-color-error-container) 100%);
+/* Unified Group Card with Inset Dividers (HyperOS grouped settings style) */
+html.hyperos .home-segment-group,
+html.hyperos .settings-segment-group,
+html[data-theme="miuix"] .home-segment-group,
+html[data-theme="miuix"] .settings-segment-group {
+    background-color: var(--md-sys-color-surface-container);
+    overflow: hidden;
+    gap: 0 !important;
 }
 
-html.hyperos .bottom-nav {
-    background: color-mix(in srgb, var(--md-sys-color-surface) 82%, transparent);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
+html.hyperos .home-segment-row,
+html.hyperos .settings-segment-group .segment-card,
+html[data-theme="miuix"] .home-segment-row,
+html[data-theme="miuix"] .settings-segment-group .segment-card {
+    background-color: transparent !important;
+    border-radius: 0 !important;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1) !important;
+}
+
+html.hyperos .home-segment-row:last-child,
+html.hyperos .settings-segment-group .segment-card:last-child,
+html[data-theme="miuix"] .home-segment-row:last-child,
+html[data-theme="miuix"] .settings-segment-group .segment-card:last-child {
+    border-bottom: none !important;
+}
+
+/* MiuiX Status Card with Gradient Glow */
+html.hyperos .home-status-card,
+html[data-theme="miuix"] .home-status-card {
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--md-sys-color-primary) 14%, var(--md-sys-color-surface-container)) 0%,
+        var(--md-sys-color-surface-container) 100%) !important;
+    border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent) !important;
+    color: var(--md-sys-color-on-surface) !important;
+}
+
+html.hyperos .home-status-card.inactive,
+html[data-theme="miuix"] .home-status-card.inactive {
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--md-sys-color-error) 14%, var(--md-sys-color-surface-container)) 0%,
+        var(--md-sys-color-surface-container) 100%) !important;
+    border: 1px solid color-mix(in srgb, var(--md-sys-color-error) 28%, transparent) !important;
+}
+
+/* MiuiX Switches (HyperOS electric blue) */
+html.hyperos .custom-switch .switch-input:checked + .switch-track,
+html[data-theme="miuix"] .custom-switch .switch-input:checked + .switch-track {
+    background-color: var(--md-sys-color-primary) !important;
+    border-color: var(--md-sys-color-primary) !important;
+}
+
+/* MiuiX Bottom Dock */
+html.hyperos .bottom-nav,
+html[data-theme="miuix"] .bottom-nav {
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 85%, transparent) !important;
+    backdrop-filter: blur(28px) !important;
+    -webkit-backdrop-filter: blur(28px) !important;
+    border-top: 1px solid rgba(128, 128, 128, 0.12) !important;
+}
+
+html.hyperos .nav-item.active .nav-icon,
+html[data-theme="miuix"] .nav-item.active .nav-icon {
+    background-color: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent) !important;
+    color: var(--md-sys-color-primary) !important;
 }

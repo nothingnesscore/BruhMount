@@ -59,5 +59,19 @@
   "susfs_label": "SUSFS",
   "susfs_active": "Active",
   "susfs_inactive": "Inactive",
-  "nm_vfs_unavailable": "VFS inactive — SUSFS only mode"
+  "nm_vfs_unavailable": "VFS inactive — SUSFS only mode",
+  "theme_label": "Interface Theme",
+  "theme_desc": "Switch between HyperOS MiuiX and Material 3",
+  "theme_auto": "Auto (System Detect)",
+  "theme_miuix": "MiuiX (HyperOS)",
+  "theme_md3": "Material Design 3 (AOSP)",
+  "susfs_security_title": "SUSFS Security",
+  "susfs_avc_spoof": "SELinux AVC Denial Spoofing",
+  "susfs_avc_spoof_desc": "Spoof audit logs to prevent root detection",
+  "susfs_auto_hide": "Automated Protection",
+  "susfs_auto_hide_desc": "Auto-hide root & module paths on boot",
+  "susfs_refresh_rules": "Refresh SUSFS Rules",
+  "susfs_refresh_done": "SUSFS rules refreshed successfully!",
+  "susfs_modal_title": "SUSFS Diagnostics",
+  "susfs_diag_hint": "Tap to inspect kernel security rules"
 }
