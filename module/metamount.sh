@@ -83,7 +83,7 @@ if [ "$NM_ACTIVE" = "1" ]; then
     for mod_path in "$MODULES_DIR"/*; do
         [ -d "$mod_path" ] || continue
         mod_name="${mod_path##*/}"
-        [ "$mod_name" = "nomount" ] && continue
+        [ "$mod_name" = "nomount" ] || [ "$mod_name" = "bruhmount" ] && continue
 
         if [ -f "$mod_path/disable" ] || [ -f "$mod_path/remove" ] || [ -f "$mod_path/skip_mount" ]; then
             echo "[SKIP] Module $mod_name is disabled/removed/skipped" >> "$LOG_FILE"; continue

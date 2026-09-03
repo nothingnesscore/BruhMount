@@ -133,8 +133,27 @@ function renderLanguagePicker() {
 // Constants & Helpers
 const MOD_DIR = "/data/adb/modules";
 const NM_DATA = "/data/adb/nomount";
-const NM_BIN = "/data/adb/modules/nomount/bin/nm";
+let MOD_ID = "bruhmount";
+let NM_BIN = "/data/adb/modules/bruhmount/bin/nm";
+let SUSFS_BIN = "/data/adb/modules/bruhmount/bin/ksu_susfs";
 const FILES = { disable: `${NM_DATA}/disable`, exclusions: `${NM_DATA}/.exclusion_list.json` };
+
+async function initModulePaths() {
+    try {
+        const { stdout } = await exec(`
+            if [ -d /data/adb/modules/bruhmount ]; then echo "bruhmount";
+            elif [ -d /data/adb/modules/nomount ]; then echo "nomount";
+            else echo "bruhmount"; fi
+        `);
+        MOD_ID = stdout.trim() || "bruhmount";
+        NM_BIN = `/data/adb/modules/${MOD_ID}/bin/nm`;
+        SUSFS_BIN = `/data/adb/modules/${MOD_ID}/bin/ksu_susfs`;
+    } catch {
+        MOD_ID = "bruhmount";
+        NM_BIN = "/data/adb/modules/bruhmount/bin/nm";
+        SUSFS_BIN = "/data/adb/modules/bruhmount/bin/ksu_susfs";
+    }
+}
 const APP_ICON_FALLBACK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzgwODA4MCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4eiIvPjwvc3ZnPg==";
 const viewLoadState = { 'view-home': false, 'view-modules': false, 'view-exclusions': false, 'view-options': false };
 
@@ -327,14 +346,13 @@ async function loadHome() {
     detectAndApplyTheme();
 
     const NM_MODE_FILE = `${NM_DATA}/nm_mode`;
-    const SUSFS_BIN = `/data/adb/modules/nomount/bin/ksu_susfs`;
 
     const script = `
         uname -r; echo "|||"
         getprop ro.product.vendor.model; [ -z "$(getprop ro.product.vendor.model)" ] && getprop ro.product.model; echo "|||"
         getprop ro.build.version.release; echo "|||"
         getprop ro.build.version.sdk; echo "|||"
-        grep "version=" ${MOD_DIR}/nomount/module.prop | cut -d= -f2; echo "|||"
+        (grep "version=" "${MOD_DIR}/${MOD_ID}/module.prop" 2>/dev/null || grep "version=" "${MOD_DIR}/nomount/module.prop" 2>/dev/null || echo "") | head -n1 | cut -d= -f2; echo "|||"
         ${NM_BIN} version 2>/dev/null; echo "|||"
         ${NM_BIN} rule list --json 2>/dev/null; echo "|||"
         cat "${NM_MODE_FILE}" 2>/dev/null || echo "unavailable"; echo "|||"
@@ -353,7 +371,7 @@ async function loadHome() {
             rules.forEach(r => {
                 if (r?.real?.startsWith(MOD_DIR)) {
                     const modName = r.real.split('/')[4];
-                    if (modName && modName !== 'nomount') modCounts[modName] = 1;
+                    if (modName && modName !== MOD_ID && modName !== 'nomount') modCounts[modName] = 1;
                 }
                 totalFileCount++;
             });
@@ -460,7 +478,7 @@ async function loadModules() {
             ${NM_BIN} rule list --json; echo "|||"
             cd ${MOD_DIR}
             for mod in *; do
-                [ ! -d "$mod" ] || [ "$mod" = "nomount" ] || [ ! -f "$mod/module.prop" ] && continue
+                [ ! -d "$mod" ] || [ "$mod" = "${MOD_ID}" ] || [ "$mod" = "nomount" ] || [ ! -f "$mod/module.prop" ] && continue
                 has_injectable=0
                 for p in ${TARGET_PARTITIONS}; do [ -d "$mod/$p" ] && { [ -d "/$p" ] || [ -d "/system/$p" ]; } && has_injectable=1 && break; done
                 [ $has_injectable -eq 0 ] && continue
@@ -478,7 +496,7 @@ async function loadModules() {
         activeRules.forEach(r => {
             if (r?.real?.startsWith(MOD_DIR)) {
                 const parts = r.real.split('/');
-                if (parts[4] && parts[4] !== 'nomount') ruleCountByMod[parts[4]] = (ruleCountByMod[parts[4]] || 0) + 1;
+                if (parts[4] && parts[4] !== MOD_ID && parts[4] !== 'nomount') ruleCountByMod[parts[4]] = (ruleCountByMod[parts[4]] || 0) + 1;
             }
         });
 
@@ -1206,6 +1224,7 @@ function initScrollListener() {
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
+    await initModulePaths();
     await setAppLocale((localStorage.getItem('nm_locale') || navigator.language || 'en').split('-')[0], false);
     applyIcons();
     syncSystemBarTheme();
@@ -1214,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initScrollListener();
     updateTopAppBar();
     viewLoadState['view-home'] = true;
-    loadHome();
+    await loadHome();
     document.body.classList.remove('loading');
 
     try {
