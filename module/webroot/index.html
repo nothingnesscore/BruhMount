@@ -134,22 +134,15 @@
                         </div>
                     </div>
 
-                    <div class="segment-card setting-item" id="theme-setting-card">
+                    <div class="segment-card setting-item-column" id="theme-setting-card">
                         <div class="setting-text">
                             <h3 data-i18n="theme_label">Interface Theme</h3>
                             <p data-i18n="theme_desc">Switch between HyperOS MiuiX and Material 3</p>
                         </div>
-                        
-                        <div class="custom-select-wrapper" id="theme-select-wrapper">
-                            <div class="custom-select-trigger" id="theme-select-trigger">
-                                <span id="theme-select-value">Auto</span>
-                                <md-icon class="dropdown-arrow">arrow_drop_down</md-icon>
-                            </div>
-                            <div class="custom-select-menu" id="theme-select-menu">
-                                <div class="custom-select-option" data-theme="auto" data-i18n="theme_auto">Auto (Detect)</div>
-                                <div class="custom-select-option" data-theme="miuix" data-i18n="theme_miuix">MiuiX (HyperOS)</div>
-                                <div class="custom-select-option" data-theme="md3" data-i18n="theme_md3">Material Design 3</div>
-                            </div>
+                        <div class="theme-segmented-control" id="theme-segmented-control" role="group" aria-label="Theme">
+                            <button type="button" class="theme-segment-btn" data-theme="auto" data-i18n="theme_auto">Auto</button>
+                            <button type="button" class="theme-segment-btn" data-theme="miuix" data-i18n="theme_miuix">HyperOS</button>
+                            <button type="button" class="theme-segment-btn" data-theme="md3" data-i18n="theme_md3">AOSP (MD3)</button>
                         </div>
                     </div>
                 </div>
@@ -167,14 +160,6 @@
                                 <span class="switch-thumb"></span>
                             </span>
                         </label>
-                    </div>
-
-                    <div class="segment-card setting-item">
-                        <div class="setting-text">
-                            <h3 data-i18n="susfs_auto_hide">Automated Protection</h3>
-                            <p data-i18n="susfs_auto_hide_desc">Auto-hide root & module paths on boot</p>
-                        </div>
-                        <span class="system-chip" id="susfs-auto-badge">Active</span>
                     </div>
                 </div>
 

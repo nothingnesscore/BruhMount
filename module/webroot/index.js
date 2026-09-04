@@ -93,6 +93,7 @@ async function setAppLocale(locale, refreshView = true) {
     });
 
     renderLanguagePicker();
+    renderThemePicker();
     const activeViewId = document.querySelector('.view-content.active')?.id;
 
     for (const id in viewLoadState) viewLoadState[id] = id === activeViewId;
@@ -1015,47 +1016,29 @@ async function addExclusion(uid, label, pkg) {
 }
 
 function renderThemePicker() {
-    const wrapper = document.getElementById('theme-select-wrapper');
-    const valueDisplay = document.getElementById('theme-select-value');
-    const menu = document.getElementById('theme-select-menu');
-    if (!wrapper || !valueDisplay || !menu) return;
+    const container = document.getElementById('theme-segmented-control');
+    if (!container) return;
 
     const currentPref = localStorage.getItem('nm_theme') || 'auto';
-    const THEME_NAMES = {
-        auto: translate('theme_auto') || 'Auto (Detect)',
-        miuix: translate('theme_miuix') || 'MiuiX (HyperOS)',
-        md3: translate('theme_md3') || 'Material Design 3'
-    };
+    const buttons = container.querySelectorAll('.theme-segment-btn');
 
-    valueDisplay.textContent = THEME_NAMES[currentPref] || THEME_NAMES.auto;
+    buttons.forEach(btn => {
+        const theme = btn.dataset.theme;
+        const isActive = (theme === currentPref);
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 
-    menu.replaceChildren();
-    for (const key of ['auto', 'miuix', 'md3']) {
-        const opt = document.createElement('div');
-        opt.className = `custom-select-option ${key === currentPref ? 'selected' : ''}`;
-        opt.textContent = THEME_NAMES[key];
-        opt.onclick = (e) => {
-            e.stopPropagation();
-            wrapper.classList.remove('open');
-            localStorage.setItem('nm_theme', key);
-            valueDisplay.textContent = THEME_NAMES[key];
-            applyTheme(key);
-            renderThemePicker();
-        };
-        menu.appendChild(opt);
-    }
-
-    if (!wrapper.dataset.listenerAttached) {
-        const trigger = document.getElementById('theme-select-trigger');
-        if (trigger) {
-            trigger.onclick = (e) => {
-                e.stopPropagation();
-                wrapper.classList.toggle('open');
-            };
+        if (!btn.dataset.bound) {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.setItem('nm_theme', theme);
+                applyTheme(theme);
+                renderThemePicker();
+                syncSystemBarTheme();
+            });
+            btn.dataset.bound = 'true';
         }
-        document.addEventListener('click', () => wrapper.classList.remove('open'));
-        wrapper.dataset.listenerAttached = 'true';
-    }
+    });
 }
 
 // Options

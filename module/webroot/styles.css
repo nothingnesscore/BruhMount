@@ -578,3 +578,58 @@ md-icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
     color: var(--md-sys-color-primary);
     font-weight: 600; padding: 3px 8px; border-radius: 6px; font-size: 12px;
 }
+
+/* Theme Segmented Control */
+.setting-item-column {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+}
+
+.theme-segmented-control {
+    display: flex;
+    background-color: var(--md-sys-color-surface-container-highest);
+    padding: 4px;
+    border-radius: 14px;
+    gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.theme-segment-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.theme-segment-btn:hover {
+    color: var(--md-sys-color-on-surface);
+}
+
+.theme-segment-btn.active {
+    background-color: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+html.hyperos .theme-segment-btn.active,
+html[data-theme="miuix"] .theme-segment-btn.active {
+    background-color: var(--md-sys-color-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(0, 122, 255, 0.35) !important;
+}
