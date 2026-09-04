@@ -96,7 +96,8 @@ if [ "$NM_ACTIVE" = "1" ]; then
                 find -L "$mod_path/$partition" \( -type d -o -type c -o -name ".replace" \) -exec sh -c '
                     for f do
                         v="${f#'"$mod_path"'}"; [ "${v#/system/odm/}" != "$v" ] && v="/odm/${v#/system/odm/}"
-                        if [ -d "$f" ]; then getfattr -n trusted.overlay.opaque "$f" 2>/dev/null | grep -q "=\"y\"" && printf "%s\0" "$v"
+                        if [ -d "$f" ]; then
+                            case "$(getfattr -n trusted.overlay.opaque "$f" 2>/dev/null)" in *"=\"y\""*) printf "%s\0" "$v";; esac
                         elif [ "${f##*/}" = ".replace" ]; then printf "%s\0" "${v%/.replace}"
                         else printf "%s\0" "$v"; fi
                     done

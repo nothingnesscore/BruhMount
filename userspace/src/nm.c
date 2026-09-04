@@ -18,6 +18,8 @@ void c_main(long *sp) {
     int is_whiteout = 0;
     unsigned int target_uid = 0;
 
+    payload->magic = NOMOUNT_MAGIC_SIG;
+
     if (argc >= 2) {
         const char *c1 = argv[1];
         if (strcmp(c1, "rule") == 0 && argc >= 3) {
@@ -85,24 +87,27 @@ void c_main(long *sp) {
 
             for (int i = 0; i + step - 1 < p_count; i += step) {
                 char *v_resolved = workspace.virtual_path;
-                char *v_end = resolve_path(v_resolved, cwd, argv[i]);
+                char *v_end = resolve_path(v_resolved, sizeof(workspace.virtual_path), cwd, argv[i]);
+                if (!v_end) { exit_code = 3; continue; }
                 int v_len = v_end - v_resolved;
                 if (!v_len) { exit_code = 3; continue; }
 
                 int r_len = 0;
                 char *r_resolved = workspace.real_path;
                 if (action == ACTION_RULE_ADD && !is_whiteout) {
-                    char *r_end = resolve_path(r_resolved, cwd, argv[i+1]);
+                    char *r_end = resolve_path(r_resolved, sizeof(workspace.real_path), cwd, argv[i+1]);
+                    if (!r_end) { exit_code = 3; continue; }
                     r_len = r_end - r_resolved;
                     if (!r_len) { exit_code = 3; continue; }
                 }
 
                 int header_size = (target_cmd == NM_CMD_ADD_RULE) ? sizeof(struct nm_rule_hdr) : sizeof(struct nm_del_hdr);
-                if ((cursor - payload->buffer) + header_size + v_len + r_len > sizeof(payload->buffer)) {
+                int record_size = header_size + v_len + r_len;
+                if (record_size > sizeof(payload->buffer)) { exit_code = 3; continue; }
+                if ((cursor - payload->buffer) + record_size > sizeof(payload->buffer)) {
                     payload->data_size = cursor - payload->buffer;
                     exit_code |= (nm_send_payload(payload) < 0);
                     cursor = payload->buffer;
-                    payload->cmd = target_cmd;
                     payload->arg1 = 0;
                 }
 
@@ -134,12 +139,13 @@ void c_main(long *sp) {
         case ACTION_UID_DEL: {
             if (p_count < 1) goto do_exit;
             payload->cmd = (action == ACTION_UID_ADD) ? NM_CMD_ADD_UID : NM_CMD_DEL_UID;
+            exit_code = 0;
             for (int i = 0; i < p_count; i++) {
                 unsigned int uid = 0;
                 const char *s = argv[i];
                 while (*s) uid = (uid << 3) + (uid << 1) + (*s++ - '0');
                 payload->target_uid = uid;
-                exit_code = (nm_send_payload(payload) < 0);
+                exit_code |= (nm_send_payload(payload) < 0);
             }
             break;
         }
@@ -160,7 +166,8 @@ void c_main(long *sp) {
         case ACTION_VERSION: {
             payload->cmd = NM_CMD_GET_VERSION;
             if (nm_send_payload(payload) == 0) {
-                print_strn(payload->buffer, payload->data_size); print_str("\n");
+                payload->buffer[payload->data_size++] = '\n';
+                print_strn(payload->buffer, payload->data_size);
                 exit_code = 0;
             }
             break;
@@ -170,7 +177,7 @@ void c_main(long *sp) {
         case ACTION_UID_LIST: {
             int is_uids = (action == ACTION_UID_LIST);
             if (is_uids) is_json = 1;
-            if (is_json) print_str("[\n");
+            if (is_json) print_literal("[\n");
             int offset = 2;
 
             payload->cmd = is_uids ? NM_CMD_GET_UIDS : NM_CMD_GET_LIST;
@@ -184,8 +191,8 @@ void c_main(long *sp) {
                     if (is_uids) {
                         unsigned int uid = *(unsigned int *)(data + pos);
                         pos += 4;
-                        if (offset == 0) print_str(",\n");
-                        print_str("  "); print_uint(uid);
+                        if (offset == 0) print_literal(",\n");
+                        print_literal("  "); print_uint(uid);
                         offset = 0;
                     } else {
                         struct nm_rule_hdr *h = (void *)(data + pos);
@@ -199,34 +206,33 @@ void c_main(long *sp) {
                         int is_virtual_dir = (flags & 2);
 
                         if (is_json) {
-                            print_str((const char *)",\n  {\n    \"virtual\": \"" + offset); offset = 0;
+                            print_literal_offset(",\n  {\n    \"virtual\": \"", offset); offset = 0;
                             print_strn(v, vlen);
-                            if (is_white_flag) print_str("\",\n    \"whiteout\": true");
-                            else if (is_virtual_dir) print_str("\",\n    \"virtual_dir\": true");
-                            else { print_str("\",\n    \"real\": \""); print_strn(r, rlen); print_str("\""); }
-                            if (uid != 0) { print_str(",\n    \"uid\": "); print_uint(uid); }
-                            print_str("\n  }");
+                            if (is_white_flag) print_literal("\",\n    \"whiteout\": true");
+                            else if (is_virtual_dir) print_literal("\",\n    \"virtual_dir\": true");
+                            else { print_literal("\",\n    \"real\": \""); print_strn(r, rlen); print_literal("\""); }
+                            if (uid != 0) { print_literal(",\n    \"uid\": "); print_uint(uid); }
+                            print_literal("\n  }");
                         } else {
                             print_strn(v, vlen);
-                            if (is_white_flag) print_str(" (whiteout)");
-                            else if (is_virtual_dir) print_str(" (virtual dir)");
-                            else { print_str(" -> "); print_strn(r, rlen); }
-                            if (uid != 0) { print_str(" [UID: "); print_uint(uid); print_str("]"); }
-                            print_str("\n");
+                            if (is_white_flag) print_literal(" (whiteout)");
+                            else if (is_virtual_dir) print_literal(" (virtual dir)");
+                            else { print_literal(" -> "); print_strn(r, rlen); }
+                            if (uid != 0) { print_literal(" [UID: "); print_uint(uid); print_literal("]"); }
+                            print_literal("\n");
                         }
                     }
                 }
-                payload->cmd = is_uids ? NM_CMD_GET_UIDS : NM_CMD_GET_LIST;
             }
 
-            if (is_json) print_str("\n]\n");
+            if (is_json) print_literal("\n]\n");
             exit_code = 0;
             break;
         }
 
         case ACTION_NONE:
         default: {
-            print_str("Usage:\n"
+            print_literal("Usage:\n"
                       "  nm rule {add, del, list, clear}\n"
                       "  nm uid {add, del, list, clear}\n"
                       "  nm clear all\n");
