@@ -53,6 +53,7 @@
   "refresh_failed": "Refresh failed",
   "load_failed": "Error loading apps",
   "status_version": "Version: {{version}}",
+  "driver_version": "Driver: v{{version}}",
   "add_exclusion": "Add exclusion",
   "mode_lkm": "LKM",
   "mode_builtin": "Built-in",

@@ -3,7 +3,7 @@
 @import "./theme.css";
 
 :root {
-    --nav-height: 74px;
+    --nav-height: 80px;
     --insets-top: var(--window-inset-top, env(safe-area-inset-top, 0px));
     --insets-bottom: var(--window-inset-bottom, env(safe-area-inset-bottom, 0px));
 }
@@ -392,17 +392,17 @@ md-icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
 }
 .nav-item {
     color: var(--md-sys-color-on-surface-variant); opacity: 0.78;
-    width: 64px; height: 64px; cursor: pointer; user-select: none;
+    width: 64px; height: 68px; cursor: pointer; user-select: none;
     transition: color 0.2s, opacity 0.2s, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .nav-item.active { opacity: 1; color: var(--md-sys-color-on-secondary-container); }
 .nav-item.active .nav-icon { border-radius: 999px; background-color: var(--md-sys-color-secondary-container); }
-.nav-icon { width: 64px; height: 34px; }
+.nav-icon { width: 64px; height: 32px; }
 .nav-item span,
 .nav-item .nav-label {
     font-size: 12px; font-weight: 600; line-height: 1.2;
     height: auto; max-height: 20px; white-space: nowrap;
-    overflow: visible; opacity: 0; margin-top: 3px;
+    overflow: visible; opacity: 0; margin-top: 4px;
     transform: translate3d(0, -2px, 0); transition: opacity 0.2s, transform 0.2s;
 }
 .nav-item.active span,

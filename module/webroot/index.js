@@ -459,7 +459,7 @@ async function loadHome() {
 
     const script = `
         uname -r; echo "|||"
-        getprop ro.product.vendor.model; [ -z "$(getprop ro.product.vendor.model)" ] && getprop ro.product.model; echo "|||"
+        mname="$(getprop ro.product.marketname 2>/dev/null)"; [ -z "$mname" ] && mname="$(getprop ro.product.odm.marketname 2>/dev/null)"; [ -z "$mname" ] && mname="$(getprop ro.product.vendor.marketname 2>/dev/null)"; [ -z "$mname" ] && mname="$(getprop ro.product.model 2>/dev/null)"; [ -z "$mname" ] && mname="$(getprop ro.product.vendor.model 2>/dev/null)"; echo "$mname"; echo "|||"
         getprop ro.build.version.release; echo "|||"
         getprop ro.build.version.sdk; echo "|||"
         (grep "version=" "${MOD_DIR}/${MOD_ID}/module.prop" 2>/dev/null || grep "version=" "${MOD_DIR}/nomount/module.prop" 2>/dev/null || echo "") | head -n1 | cut -d= -f2; echo "|||"
@@ -467,6 +467,7 @@ async function loadHome() {
         ${NM_BIN} rule list --json 2>/dev/null; echo "|||"
         cat "${NM_MODE_FILE}" 2>/dev/null || echo "unavailable"; echo "|||"
         if [ -x "${SUSFS_BIN}" ]; then ${SUSFS_BIN} show version 2>/dev/null || ${SUSFS_BIN} show 2>/dev/null | head -5; else echo ""; fi; echo "|||"
+        getprop ro.mi.os.version.name 2>/dev/null; [ -z "$(getprop ro.mi.os.version.name)" ] && getprop ro.miui.ui.version.name 2>/dev/null; echo "|||"
     `;
 
     try {
@@ -498,6 +499,16 @@ async function loadHome() {
 
         const nmMode = (parts[7] || 'unavailable').trim();
         const susfsRaw = (parts[8] || '').trim();
+        const miuiVer = (parts[9] || '').trim();
+
+        let androidDisplay = unk;
+        if (aRel && aRel !== unk) {
+            androidDisplay = `Android ${aRel}`;
+            if (miuiVer) androidDisplay += ` (${miuiVer})`;
+            else if (aSdk && aSdk !== unk) androidDisplay += ` (API ${aSdk})`;
+        } else if (aSdk && aSdk !== unk) {
+            androidDisplay = `API ${aSdk}`;
+        }
 
         // Query detailed SUSFS status in parallel
         await querySusfs();
@@ -512,6 +523,7 @@ async function loadHome() {
         const nmActive = (nmMode === 'built-in' || nmMode === 'lkm');
         const homeData = {
             kernelVer: kVer, deviceModel: model,
+            androidInfo: androidDisplay,
             versionFull: nmActive ? `${mVer} (${dVer})` : unk,
             driverVersion: `${dVer}`,
             moduleVersion: `${mVer}`,
@@ -542,7 +554,7 @@ function applyHomeData(data, statsText) {
     if (el.moduleVersion) el.moduleVersion.textContent = translate('status_version', {
         version: (data.moduleVersion || translate('unknown_value')).replace(/^v(?=\d)/i, '')
     });
-    if (el.statusLabel) el.statusLabel.textContent = translate('status_version', {
+    if (el.statusLabel) el.statusLabel.textContent = translate('driver_version', {
         version: (data.driverVersion || translate('unknown_value')).replace(/^v(?=\d)/i, '')
     });
     if (statsText && el.stats) el.stats.textContent = statsText;
