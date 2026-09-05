@@ -1,7 +1,8 @@
 id=bruhmount
 name=BruhMount
 version=v2.1.0-enhanced
-versionCode=210
+versionCode=21413
 author=nothingnesscore (based on maxsteeel)
 description=Unified NoMount VFS Metamodule with Built-in SUSFS Automation. Zero mount table footprint.
 metamodule=1
+updateJson=https://raw.githubusercontent.com/nothingnesscore/BruhMount/master/update.json

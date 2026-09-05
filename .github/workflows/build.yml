@@ -7,7 +7,12 @@ on:
       - '**.md'
       - '**.git*'
       - '**.sh'
+      - 'update.json'
+      - 'changelog.md'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-lkm:
@@ -100,8 +105,9 @@ jobs:
           COMMIT_COUNT=$(git rev-list --count HEAD)
           NAME=$(sed -n 's/^name=//p' module/module.prop | tr -d '\r' | tr -d ' ')
           BASE_VERSION=$(sed -n 's/^version=//p' module/module.prop | tr -d '\r' | tr -d ' ')
+          VERSION_CODE=$((21000 + COMMIT_COUNT))
 
-          sed -i "s/^versionCode=.*/versionCode=${COMMIT_COUNT}/" module/module.prop
+          sed -i "s/^versionCode=.*/versionCode=${VERSION_CODE}/" module/module.prop
           if [ "${{ github.ref }}" != "refs/heads/master" ]; then
             sed -i "s/^version=\(.*\)/version=\1 \(${COMMIT_COUNT}-${SHORT_HASH}-dev\)/" module/module.prop
             echo "ARTIFACT_NAME=${NAME}-${BASE_VERSION}-dev-${SHORT_HASH}-${COMMIT_COUNT}" >> $GITHUB_ENV
@@ -109,6 +115,10 @@ jobs:
             sed -i "s/^version=\(.*\)/version=\1 \(${COMMIT_COUNT}\)/" module/module.prop
             echo "ARTIFACT_NAME=${NAME}-${BASE_VERSION}-release-${SHORT_HASH}-${COMMIT_COUNT}" >> $GITHUB_ENV
           fi
+          echo "VERSION_CODE=${VERSION_CODE}" >> $GITHUB_ENV
+          echo "BASE_VERSION=${BASE_VERSION}" >> $GITHUB_ENV
+          echo "COMMIT_COUNT=${COMMIT_COUNT}" >> $GITHUB_ENV
+          echo "SHORT_HASH=${SHORT_HASH}" >> $GITHUB_ENV
 
       - name: Optimize release module (via standalone esbuild)
         run: |
@@ -164,3 +174,36 @@ jobs:
           MODULE_ZIP: ${{ env.MODULE_ZIP }}
           ZIP_NAME: ${{ env.ZIP_NAME }}
         run: python3 .github/scripts/upload_to_telegram.py
+
+      - name: Publish GitHub Release & Sync update.json
+        if: github.ref == 'refs/heads/master' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "[+] Preparing release asset..."
+          cp "${MODULE_ZIP}" "$RUNNER_TEMP/BruhMount.zip"
+
+          echo "[+] Updating GitHub Release 'latest'..."
+          COMMITS=$(git log --no-merges -n 5 --pretty=format:"* %s (%h)" 2>/dev/null || git log -n 5 --pretty=format:"* %s (%h)")
+
+          if gh release view latest >/dev/null 2>&1; then
+            echo "[+] Uploading assets to existing latest release..."
+            gh release upload latest "$RUNNER_TEMP/BruhMount.zip" "${MODULE_ZIP}" --clobber
+            gh release edit latest --title "BruhMount Latest (${BASE_VERSION} #${COMMIT_COUNT})"
+          else
+            echo "[+] Creating new latest release..."
+            gh release create latest "$RUNNER_TEMP/BruhMount.zip" "${MODULE_ZIP}" \
+              --title "BruhMount Latest (${BASE_VERSION} #${COMMIT_COUNT})" \
+              --notes "Automated continuous release for SukiSU / KernelSU in-app updates."
+          fi
+
+          echo "[+] Updating update.json in repository..."
+          printf '{\n  "version": "%s (%s)",\n  "versionCode": %s,\n  "zipUrl": "https://github.com/nothingnesscore/BruhMount/releases/download/latest/BruhMount.zip",\n  "changelog": "https://raw.githubusercontent.com/nothingnesscore/BruhMount/master/changelog.md"\n}\n' "$BASE_VERSION" "$COMMIT_COUNT" "$VERSION_CODE" > update.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add update.json
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(release): update update.json for version ${VERSION_CODE} [skip ci]"
+            git push origin master || echo "Warning: push to master skipped or failed"
+          fi
