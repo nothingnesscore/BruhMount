@@ -6,6 +6,7 @@
 [![CI Build](https://github.com/nothingnesscore/BruhMount/actions/workflows/build.yml/badge.svg)](https://github.com/nothingnesscore/BruhMount/actions/workflows/build.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Platform: Android](https://img.shields.io/badge/Platform-Android%2012--16-green.svg)](https://source.android.com)
+[![Telegram Channel](https://img.shields.io/badge/Telegram-@bruhperidot-blue.svg?logo=telegram)](https://t.me/bruhperidot)
 
 ---
 
@@ -74,7 +75,7 @@ When an app accesses a redirected system file (e.g., `/vendor/etc/audio_effects.
   * Custom kernel with built-in NoMount (`CONFIG_NOMOUNT=y`) and SUSFS (such as **BruhKernel**).
 
 ### Setup
-1. Download the latest `BruhMount-*.zip` from [GitHub Actions](https://github.com/nothingnesscore/BruhMount/actions).
+1. Download the latest `BruhMount-*.zip` from [GitHub Actions](https://github.com/nothingnesscore/BruhMount/actions) or the official Telegram channel **[@bruhperidot](https://t.me/bruhperidot)**.
 2. Flash the ZIP inside KernelSU / APatch Manager.
 3. If you have a separate `susfs4ksu` module installed, **disable or remove it** — BruhMount handles SUSFS automatically.
 4. Reboot your device.

@@ -138,3 +138,100 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ runner.temp }}/nomount-module-${{ github.run_id }}-${{ github.run_attempt }}/
+
+      - name: Package flashable module ZIP
+        run: |
+          MODULE_BUILD="$RUNNER_TEMP/nomount-module-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          ZIP_FILE="$RUNNER_TEMP/${ARTIFACT_NAME}.zip"
+          command -v zip >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y zip)
+          cd "$MODULE_BUILD"
+          zip -r9 "$ZIP_FILE" .
+          echo "MODULE_ZIP=$ZIP_FILE" >> $GITHUB_ENV
+          echo "ZIP_NAME=${ARTIFACT_NAME}.zip" >> $GITHUB_ENV
+          echo "[+] Flashable module ZIP created: $ZIP_FILE ($(du -h "$ZIP_FILE" | cut -f1))"
+
+      - name: Upload module ZIP artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-zip
+          path: ${{ env.MODULE_ZIP }}
+
+      - name: Upload module to Telegram (@bruhperidot)
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TG_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || '@bruhperidot' }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "::notice title=Telegram Upload Notice::TELEGRAM_BOT_TOKEN is not configured in repository secrets. Module ZIP was built successfully."
+            echo "To enable automatic module uploads to https://t.me/bruhperidot:"
+            echo "  1. Open Telegram and message @BotFather to create a bot (/newbot)."
+            echo "  2. Copy the HTTP API token provided by BotFather."
+            echo "  3. Add the bot to your channel (https://t.me/bruhperidot) as an Administrator with 'Post Messages' permission."
+            echo "  4. In GitHub -> BruhMount repo -> Settings -> Secrets and variables -> Actions -> New repository secret:"
+            echo "     Name: TELEGRAM_BOT_TOKEN"
+            echo "     Value: <your bot token>"
+            exit 0
+          fi
+
+          echo "[+] Generating monospace changelog caption..."
+          SHORT_HASH=$(git rev-parse --short HEAD)
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          VERSION=$(sed -n 's/^version=//p' module/module.prop | tr -d '\r')
+          BRANCH="${GITHUB_REF_NAME:-master}"
+
+          COMMITS=$(git log --no-merges -n 5 --pretty=format:"• %s (%h)" 2>/dev/null || git log -n 5 --pretty=format:"• %s (%h)")
+
+          export RAW_CAPTION=$(cat << EOF
+📦 BruhMount Flashable Module
+──────────────────────────────
+Version : ${VERSION}
+Branch  : ${BRANCH}
+Commit  : ${SHORT_HASH}
+Target  : KernelSU / APatch
+
+Changelog:
+${COMMITS}
+──────────────────────────────
+EOF
+)
+
+          python3 - << 'PYEOF'
+import html
+import os
+
+raw = os.environ.get("RAW_CAPTION", "")
+if len(raw) > 950:
+    raw = raw[:947] + "..."
+
+escaped = html.escape(raw)
+formatted = f"<pre><code>{escaped}</code></pre>"
+with open("/tmp/tg_caption.txt", "w", encoding="utf-8") as f:
+    f.write(formatted)
+PYEOF
+
+          CAPTION=$(cat /tmp/tg_caption.txt)
+          echo "Caption generated (${#CAPTION} chars):"
+          echo "$CAPTION"
+
+          echo "[+] Uploading ${ZIP_NAME} to Telegram channel: ${TELEGRAM_CHAT_ID}..."
+          HTTP_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+            -F "chat_id=${TELEGRAM_CHAT_ID}" \
+            -F "document=@${MODULE_ZIP};filename=${ZIP_NAME}" \
+            --form-string "caption=${CAPTION}" \
+            -F "parse_mode=HTML")
+
+          HTTP_BODY=$(echo "$HTTP_RESPONSE" | sed -e '$d')
+          HTTP_STATUS=$(echo "$HTTP_RESPONSE" | tail -n 1 | cut -d: -f2)
+
+          echo "Response Body: $HTTP_BODY"
+          echo "HTTP Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -eq 200 ] && [ "$(echo "$HTTP_BODY" | jq -r '.ok // empty')" = "true" ]; then
+            echo "🎉 Successfully uploaded ${ZIP_NAME} to ${TELEGRAM_CHAT_ID}!"
+          else
+            ERROR_DESC=$(echo "$HTTP_BODY" | jq -r '.description // "Unknown error"')
+            echo "::error title=Telegram Upload Failed::Telegram API error: ${ERROR_DESC} (HTTP ${HTTP_STATUS})"
+            echo "Please ensure your bot is an Administrator in ${TELEGRAM_CHAT_ID} with permission to post messages."
+            exit 1
+          fi
