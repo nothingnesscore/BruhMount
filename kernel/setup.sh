@@ -2,8 +2,8 @@
 set -eu
 
 GKI_ROOT=$(pwd)
-REPO_URL="https://github.com/maxsteeel/nomount"
-REPO_DIR="$GKI_ROOT/NoMount"
+REPO_URL="https://github.com/nothingnesscore/BruhMount"
+REPO_DIR="$GKI_ROOT/BruhMount"
 
 display_usage() {
     echo "Usage: $0 [--cleanup | <commit-or-tag>]"

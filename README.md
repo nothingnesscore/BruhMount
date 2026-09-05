@@ -28,7 +28,7 @@ With **BruhMount**, your modules (audio mods, fonts, system tweaks, vendor overl
   * Automatically applies AVC denial log spoofing and masks module shared libraries (`.so`) from `/proc/self/maps`.
 * 🔑 **Zero `/dev` Nodes or IOCTLs:** Metamodule communication with the kernel takes place via the Linux kernel Keyring subsystem (`SYS_add_key` with key type `"nomount"`), leaving no device files to manage.
 * 📱 **Intuitive WebUI:** Inspect injected files, hot-load modules dynamically, and review active redirection rules directly from the KernelSU / APatch manager interface.
-* 🎯 **Smart Metamodule Filtering:** Modules that don't modify partitions (e.g., pure scripts or boot configs) run completely untouched and standalone. Only modules requiring partition overlays (`system`, `vendor`, `product`, etc.) are processed.
+* 📁 **Partition Overlay Targeting:** Standard metamodule architecture—only modules containing partition file trees (`system`, `vendor`, `product`, etc.) are processed for VFS redirection. Pure script or service modules remain untouched.
 * 🛡️ **Per-App UID Isolation:** Isolate specific applications by UID via the WebUI or CLI to bypass redirections, ensuring they interact strictly with the original stock filesystem.
 
 ---

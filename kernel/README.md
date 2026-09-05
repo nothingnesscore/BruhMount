@@ -9,13 +9,13 @@ This section contains everything related to integrating NoMount into your custom
 To seamlessly patch NoMount into your kernel source so it can be compiled built-in (`=y`) or LKM (`=m`), run the setup script at the root of your kernel tree:
 
 ```bash
-curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -
+curl https://raw.githubusercontent.com/nothingnesscore/BruhMount/refs/heads/master/kernel/setup.sh | bash -
 ```
 
 If you want to integrate a specific branch, you can specific it with `bash -s <branch>`. For example:
 ```bash
-# To integrate the dev branch
-curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -s dev
+# To integrate the master branch
+curl https://raw.githubusercontent.com/nothingnesscore/BruhMount/refs/heads/master/kernel/setup.sh | bash -s master
 ```
 
 Once applied, simply compile your kernel as usual.
@@ -27,7 +27,7 @@ If you prefer to compile NoMount as an out-of-tree module (`nomount.ko`) for you
 1. **Pull the NoMount source into your kernel tree:**
 (If you already have NoMount integrated in your kernel, you can skip this step).
 ```bash
-curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -s dev
+curl https://raw.githubusercontent.com/nothingnesscore/BruhMount/refs/heads/master/kernel/setup.sh | bash -s master
 ```
 
 2. **Prepare the kernel headers:**
