@@ -13,7 +13,7 @@
 
 **BruhMount** is an advanced Android **Metamodule** that unifies two core concepts in modern Android system modification:
 1. **NoMount In-Memory VFS Redirection:** Replaces traditional OverlayFS / Magic Mount with dynamic, RAM-based VFS path interception via the Linux Keyring subsystem (`SYS_add_key`). It creates **0 mount points** in `/proc/mounts` and `/proc/self/mountinfo`.
-2. **SUSFS Kernel Automation:** Eliminates the need for a separate `susfs4ksu` module by embedding the `ksu_susfs` control tool directly and automatically registering `/data/adb`, active module paths, and security spoofing at boot.
+2. **SUSFS Kernel Automation:** Eliminates the need for a separate `susfs4ksu` module by embedding the `ksu_susfs` control tool directly and automatically registering `/data/adb`, active module paths, and security spoofing at boot (compatible with SUSFS v1.5.0, v2.0.0, and v2.3.0+).
 
 With **BruhMount**, your modules (audio mods, fonts, system tweaks, vendor overlays) function transparently, providing clean filesystem redirection and complete mount isolation without modifying underlying partitions.
 
@@ -49,7 +49,7 @@ With **BruhMount**, your modules (audio mods, fonts, system tweaks, vendor overl
 │                   Linux Kernel Layer                   │
 │                                                        │
 │  ┌────────────────────────┐  ┌──────────────────────┐  │
-│  │     NoMount Subsystem  │  │   SUSFS 2.3 Subsystem│  │
+│  │     NoMount Subsystem  │  │   Kernel SUSFS Engine│  │
 │  │  - RAM-cached dentries │  │  - Path & Stat Hiding│  │
 │  │  - Keyring IPC         │  │  - Map Inode Cloaking│  │
 │  │  - Zero /proc/mounts   │  │  - AVC Denial Spoof  │  │

@@ -65,12 +65,12 @@
  * =================================================== */
 html.hyperos,
 html[data-theme="miuix"] {
-    --md-sys-color-primary: #007aff !important;
-    --md-sys-color-on-primary: #ffffff !important;
-    --md-sys-color-primary-container: #d9ebff !important;
-    --md-sys-color-on-primary-container: #002b66 !important;
-    --md-sys-color-secondary-container: #e6f0fa !important;
-    --md-sys-color-on-secondary-container: #003666 !important;
+    --md-sys-color-primary: var(--primary, #007aff) !important;
+    --md-sys-color-on-primary: var(--onPrimary, #ffffff) !important;
+    --md-sys-color-primary-container: var(--primaryContainer, #d9ebff) !important;
+    --md-sys-color-on-primary-container: var(--onPrimaryContainer, #002b66) !important;
+    --md-sys-color-secondary-container: var(--secondaryContainer, #e6f0fa) !important;
+    --md-sys-color-on-secondary-container: var(--onSecondaryContainer, #003666) !important;
     --md-sys-color-background: #f2f3f5 !important;
     --md-sys-color-surface: #f2f3f5 !important;
     --md-sys-color-on-surface: #111111 !important;
@@ -88,12 +88,12 @@ html[data-theme="miuix"] {
 @media (prefers-color-scheme: dark) {
     html.hyperos,
     html[data-theme="miuix"] {
-        --md-sys-color-primary: #3482ff !important;
-        --md-sys-color-on-primary: #001f4d !important;
-        --md-sys-color-primary-container: #004499 !important;
-        --md-sys-color-on-primary-container: #c7deff !important;
-        --md-sys-color-secondary-container: #162436 !important;
-        --md-sys-color-on-secondary-container: #bdd7f5 !important;
+        --md-sys-color-primary: var(--primary, #3482ff) !important;
+        --md-sys-color-on-primary: var(--onPrimary, #001f4d) !important;
+        --md-sys-color-primary-container: var(--primaryContainer, #004499) !important;
+        --md-sys-color-on-primary-container: var(--onPrimaryContainer, #c7deff) !important;
+        --md-sys-color-secondary-container: var(--secondaryContainer, #162436) !important;
+        --md-sys-color-on-secondary-container: var(--onSecondaryContainer, #bdd7f5) !important;
         --md-sys-color-background: #000000 !important;
         --md-sys-color-surface: #000000 !important;
         --md-sys-color-on-surface: #f0f1f3 !important;
@@ -240,7 +240,14 @@ html[data-theme="miuix"] .bottom-nav .nav-item .nav-label {
     font-size: 11px !important;
     font-weight: 500 !important;
     letter-spacing: 0.2px !important;
-    line-height: 1 !important;
+    line-height: 1.2 !important;
+    height: auto !important;
+    max-height: 16px !important;
+    opacity: 0.82 !important;
+    overflow: visible !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    display: block !important;
 }
 
 html.hyperos .bottom-nav .nav-item.active,

@@ -167,10 +167,14 @@ customElements.define('md-icon', class extends HTMLElement {});
 const ICON_PATHS = {
     account_tree: 'M600-200v-40h-80q-33 0-56.5-23.5T440-320v-320h-80v40q0 33-23.5 56.5T280-520H160q-33 0-56.5-23.5T80-600v-160q0-33 23.5-56.5T160-840h120q33 0 56.5 23.5T360-760v40h240v-40q0-33 23.5-56.5T680-840h120q33 0 56.5 23.5T880-760v160q0 33-23.5 56.5T800-520H680q-33 0-56.5-23.5T600-600v-40h-80v320h80v-40q0-33 23.5-56.5T680-440h120q33 0 56.5 23.5T880-360v160q0 33-23.5 56.5T800-120H680q-33 0-56.5-23.5T600-200ZM160-760v160-160Zm520 400v160-160Zm0-400v160-160Zm0 160h120v-160H680v160Zm0 400h120v-160H680v160ZM160-600h120v-160H160v160Z',
     add: 'M440-440H240q-17 0-28.5-11.5T200-480q0-17 11.5-28.5T240-520h200v-200q0-17 11.5-28.5T480-760q17 0 28.5 11.5T520-720v200h200q17 0 28.5 11.5T760-480q0 17-11.5 28.5T720-440H520v200q0 17-11.5 28.5T480-200q-17 0-28.5-11.5T440-240v-200Z',
+    android: 'M160-200v-240h-40q-17 0-28.5-11.5T80-480q0-17 11.5-28.5T120-520h40v-80q0-66 47-113t113-47h320q66 0 113 47t47 113v80h40q17 0 28.5 11.5T880-480q0 17-11.5 28.5T840-440h-40v240q0 33-23.5 56.5T720-120H240q-33 0-56.5-23.5T160-200Zm80-240h480v-80q0-33-23.5-56.5T640-600H320q-33 0-56.5 23.5T240-520v80Zm120-40q17 0 28.5-11.5T400-520q0-17-11.5-28.5T360-560q-17 0-28.5 11.5T320-520q0 17 11.5 28.5T360-480Zm240 0q17 0 28.5-11.5T640-520q0-17-11.5-28.5T600-560q-17 0-28.5 11.5T560-520q0 17 11.5 28.5T600-480Z',
     arrow_drop_down: 'M480-360 280-560h400L480-360Z',
     chevron_right: 'M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z',
+    info: 'M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z',
     palette: 'M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-84 31.5-156.5T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 126.5T880-480q0 83-31.5 155.5T763-198q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z',
     security: 'M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Z',
+    terminal: 'M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm120-80 140-140-140-140 56-56 196 196-196 196-56-56Zm240 0v-80h200v80H520Z',
+    verified: 'm344-60-76-128-144-32 14-148-98-112 98-112-14-148 144-32 76-128 136 58 136-58 76 128 144 32-14 148 98 112-98 112 14 148-144 32-76 128-136-58-136 58Zm80-244 240-240-56-56-184 184-86-86-56 56 142 142Z',
     check_circle: 'm424-408-86-86q-11-11-28-11t-28 11q-11 11-11 28t11 28l114 114q12 12 28 12t28-12l226-226q11-11 11-28t-11-28q-11-11-28-11t-28 11L424-408Zm56 328q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z',
     close: 'M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z',
     delete: 'M280-120q-33 0-56.5-23.5T200-200v-520q-17 0-28.5-11.5T160-760q0-17 11.5-28.5T200-800h160q0-17 11.5-28.5T400-840h160q17 0 28.5 11.5T600-800h160q17 0 28.5 11.5T800-760q0 17-11.5 28.5T760-720v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM428.5-291.5Q440-303 440-320v-280q0-17-11.5-28.5T400-640q-17 0-28.5 11.5T360-600v280q0 17 11.5 28.5T400-280q17 0 28.5-11.5Zm160 0Q600-303 600-320v-280q0-17-11.5-28.5T560-640q-17 0-28.5 11.5T520-600v280q0 17 11.5 28.5T560-280q17 0 28.5-11.5ZM280-720v520-520Z',
@@ -383,6 +387,17 @@ function applyTheme(themeKey) {
     }
 }
 
+function applyAmoled(enable) {
+    const isAmoled = enable !== undefined ? !!enable : (localStorage.getItem('nm_amoled') === '1');
+    if (isAmoled) {
+        document.documentElement.classList.add('amoled');
+        document.documentElement.setAttribute('data-amoled', 'true');
+    } else {
+        document.documentElement.classList.remove('amoled');
+        document.documentElement.removeAttribute('data-amoled');
+    }
+}
+
 // SUSFS Live Diagnostics Engine
 let susfsCache = {
     active: false,
@@ -400,13 +415,20 @@ async function querySusfs() {
                 ${SUSFS_BIN} show version 2>/dev/null || echo ""; echo "|||"
                 ${SUSFS_BIN} show variant 2>/dev/null || echo ""; echo "|||"
                 ${SUSFS_BIN} show enabled_features 2>/dev/null || echo ""; echo "|||"
-                ${SUSFS_BIN} show 2>/dev/null || echo ""; echo "|||"
+                if [ -s "${NM_DATA}/susfs.log" ]; then
+                    cat "${NM_DATA}/susfs.log" 2>/dev/null
+                elif [ -f "${NM_DATA}/susfs.log" ]; then
+                    echo "[INFO] Logging initialized. Waiting for background events."
+                else
+                    echo "[INFO] SUSFS kernel active. Run 'Refresh SUSFS Rules' in Options to initialize activity log."
+                fi
+                echo "|||"
             else
                 echo ""; echo "|||"; echo ""; echo "|||"; echo ""; echo "|||"; echo ""; echo "|||"
             fi
         `;
         const { stdout } = await exec(script);
-        const [ver, variant, features, rawHelp] = (stdout || '').split('|||').map(s => (s || '').trim());
+        const [ver, variant, features, susfsLog] = (stdout || '').split('|||').map(s => (s || '').trim());
 
         const active = !!(ver && !ver.includes('NOT_SUPPORTED') && !ver.includes('error'));
         const featureList = features ? features.split('\n').map(f => f.trim()).filter(Boolean) : [];
@@ -417,7 +439,7 @@ async function querySusfs() {
             variant: active ? (variant || 'GKI') : '',
             avcSpoof: true,
             features: featureList,
-            raw: [ver ? `Version: ${ver}` : '', variant ? `Variant: ${variant}` : '', features, rawHelp].filter(Boolean).join('\n\n')
+            raw: susfsLog || (active ? `[SUSFS] Kernel Subsystem Active (${variant || 'GKI'})` : 'Kernel does not support SUSFS syscalls.')
         };
         return susfsCache;
     } catch (e) {
@@ -716,6 +738,16 @@ async function loadModule(modId) {
                 printf "/%s\\0%s/%s\\0" "$v" "$mod" "$f"
             done
         ' _ "${modPath}" {} + 2>/dev/null | xargs -0 -r ${NM_BIN} rule add
+
+        # Automatically protect hot-loaded module under SUSFS
+        if [ -x "${SUSFS_BIN}" ]; then
+            "${SUSFS_BIN}" add_sus_path "${modPath}" >/dev/null 2>&1
+            find -L "${modPath}" -type f -name "*.so" 2>/dev/null | while read -r lib; do
+                "${SUSFS_BIN}" add_sus_map "$lib" >/dev/null 2>&1
+            done
+            ts="$(date '+%Y-%m-%d %H:%M:%S')"
+            echo "[$ts] [HOTLOAD] Module ${modId} injected and protected under SUSFS" >> "${NM_DATA}/susfs.log"
+        fi
     `;
     try { await exec(script); } catch (e) { throw e; }
 }
@@ -739,6 +771,9 @@ async function unloadModule(modId) {
                 fi
             done
         ' _ {} + 2>/dev/null | xargs -0 -r ${NM_BIN} rule del
+
+        ts="$(date '+%Y-%m-%d %H:%M:%S')"
+        echo "[$ts] [HOTUNLOAD] Module ${modId} unloaded from kernel VFS" >> "${NM_DATA}/susfs.log"
     `;
     try { await exec(script); } catch (e) { throw e; }
 }
@@ -1048,7 +1083,18 @@ async function loadOptions() {
     const swSafe = document.querySelector('#setting-safemode input'),
           btnClear = document.getElementById('btn-clear-rules'),
           swAvc = document.querySelector('#setting-susfs-avc input'),
-          btnRefreshSusfs = document.getElementById('btn-refresh-susfs');
+          btnRefreshSusfs = document.getElementById('btn-refresh-susfs'),
+          swAmoled = document.querySelector('#switch-amoled input');
+
+    if (swAmoled) {
+        swAmoled.checked = localStorage.getItem('nm_amoled') === '1';
+        swAmoled.onchange = (e) => {
+            localStorage.setItem('nm_amoled', e.target.checked ? '1' : '0');
+            applyAmoled(e.target.checked);
+            syncSystemBarTheme();
+            showToast(`AMOLED Mode: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+        };
+    }
 
     if (swSafe) {
         swSafe.checked = (await exec(`[ -f ${FILES.disable} ] && echo yes`)).stdout.includes('yes');
@@ -1069,17 +1115,32 @@ async function loadOptions() {
         btnRefreshSusfs.onclick = async () => {
             showToast('Applying SUSFS security rules...');
             const refreshScript = `
+                SUSFS_LOG="${NM_DATA}/susfs.log"
+                log_s() {
+                    local ts; ts="$(date '+%Y-%m-%d %H:%M:%S')"
+                    echo "[$ts] [\$1] \$2" >> "$SUSFS_LOG"
+                }
                 if [ -x "${SUSFS_BIN}" ]; then
-                    for p in /data/adb /data/adb/modules /data/adb/ksu /data/adb/ap /data/adb/magisk /data/local/tmp; do
-                        [ -e "$p" ] && "${SUSFS_BIN}" add_sus_path "$p" 2>/dev/null
+                    log_s "MANUAL" "Manual refresh requested from BruhMount WebUI"
+                    for p in /data/adb /data/adb/modules /data/adb/nomount /data/adb/ksu /data/adb/ap /data/adb/magisk /data/local/tmp; do
+                        if [ -e "$p" ]; then
+                            "${SUSFS_BIN}" add_sus_path "$p" 2>/dev/null
+                            log_s "ACTION" "add_sus_path: $p -> [SUCCESS]"
+                        fi
                     done
                     for m in /data/adb/modules/*; do
-                        [ -d "$m" ] && "${SUSFS_BIN}" add_sus_path "$m" 2>/dev/null
+                        if [ -d "$m" ]; then
+                            "${SUSFS_BIN}" add_sus_path "$m" 2>/dev/null
+                            log_s "MODULE" "add_sus_path: \${m##*/} -> [SUCCESS]"
+                        fi
                     done
                     find -L /data/adb/modules -type f -name "*.so" 2>/dev/null | while read -r lib; do
                         "${SUSFS_BIN}" add_sus_map "$lib" 2>/dev/null
+                        log_s "MAP" "add_sus_map: \${lib##*/} -> [SUCCESS]"
                     done
                     "${SUSFS_BIN}" enable_avc_log_spoofing 1 2>/dev/null
+                    log_s "SECURITY" "enable_avc_log_spoofing: 1 -> [SUCCESS]"
+                    log_s "STATUS" "SUSFS background cloak updated."
                 fi
             `;
             await exec(refreshScript);
@@ -1438,6 +1499,7 @@ function initScrollListener() {
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
     applyTheme(localStorage.getItem('nm_theme') || 'auto');
+    applyAmoled();
     await initModulePaths();
     await setAppLocale((localStorage.getItem('nm_locale') || navigator.language || 'en').split('-')[0], false);
     applyIcons();

@@ -74,5 +74,7 @@
   "susfs_refresh_done": "SUSFS rules refreshed successfully!",
   "susfs_modal_title": "SUSFS Diagnostics",
   "susfs_diag_hint": "Tap to inspect kernel security rules",
-  "module_version_label": "Module version"
+  "module_version_label": "Module version",
+  "amoled_label": "AMOLED Dark Mode",
+  "amoled_desc": "Pitch black (#000000) for OLED/AMOLED screens"
 }

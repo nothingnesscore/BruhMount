@@ -34,7 +34,7 @@
 
                 <div class="home-segment-group">
                     <div class="home-segment-row">
-                        <div class="segment-icon"><md-icon>link_off</md-icon></div>
+                        <div class="segment-icon"><md-icon>verified</md-icon></div>
                         <div class="info-data">
                             <span class="info-label" data-i18n="module_version_label">Module Version</span>
                             <span class="info-value" id="module-version">Loading...</span>
@@ -42,7 +42,7 @@
                     </div>
 
                     <div class="home-segment-row">
-                        <div class="segment-icon"><md-icon>account_tree</md-icon></div>
+                        <div class="segment-icon"><md-icon>extension</md-icon></div>
                         <div class="info-data">
                             <span class="info-label" data-i18n="status_label">Status</span>
                             <span class="info-value" id="injection-stats">Calculating...</span>
@@ -73,7 +73,7 @@
                     </div>
 
                     <div class="home-segment-row">
-                        <div class="segment-icon"><md-icon>settings_suggest</md-icon></div>
+                        <div class="segment-icon"><md-icon>android</md-icon></div>
                         <div class="info-data">
                             <span class="info-label" data-i18n="system_label">System</span>
                             <span class="info-value" id="android-ver">Loading...</span>
@@ -81,9 +81,7 @@
                     </div>
 
                     <div class="home-segment-row">
-                        <div class="segment-icon">
-                            <md-icon>memory</md-icon>
-                        </div>
+                        <div class="segment-icon"><md-icon>terminal</md-icon></div>
                         <div class="info-data">
                             <span class="info-label" data-i18n="kernel_label">Kernel</span>
                             <span class="info-value" id="kernel-version">Loading...</span>
@@ -145,6 +143,19 @@
                             <button type="button" class="theme-segment-btn" data-theme="md3" data-i18n="theme_md3">AOSP (MD3)</button>
                         </div>
                     </div>
+
+                    <div class="segment-card setting-item" id="setting-amoled">
+                        <div class="setting-text">
+                            <h3 data-i18n="amoled_label">AMOLED Dark Mode</h3>
+                            <p data-i18n="amoled_desc">Pitch black (#000000) for OLED/AMOLED screens</p>
+                        </div>
+                        <label class="custom-switch" id="switch-amoled">
+                            <input type="checkbox" class="switch-input" aria-label="AMOLED Dark Mode">
+                            <span class="switch-track">
+                                <span class="switch-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="segment-section-label" data-i18n="susfs_security_title">SUSFS Security</div>
@@ -176,21 +187,21 @@
         <div class="bottom-nav">
             <div class="nav-item active" data-target="view-home">
                 <div class="nav-icon"><md-icon>home</md-icon></div>
-                <span data-i18n="nav_home">Home</span>
+                <span class="nav-label" data-i18n="nav_home">Home</span>
             </div>
             <div class="nav-item" data-target="view-modules">
                 <div class="nav-icon"><md-icon>extension</md-icon></div>
-                <span data-i18n="nav_modules">Modules</span>
+                <span class="nav-label" data-i18n="nav_modules">Modules</span>
             </div>
             <div class="nav-item" data-target="view-exclusions">
                 <div class="nav-icon"><md-icon>shield</md-icon></div>
-                <span data-i18n="nav_exclusions">Exclusions</span>
+                <span class="nav-label" data-i18n="nav_exclusions">Exclusions</span>
             </div>
             <div class="nav-item" data-target="view-options">
                 <div class="nav-icon"><md-icon>settings</md-icon></div>
-                <span data-i18n="nav_options">Options</span>
+                <span class="nav-label" data-i18n="nav_options">Options</span>
             </div>
-    </div>
+        </div>
 
     <div id="fab-container">
         <button class="custom-fab" id="fab-add-exclusion" aria-label="Add exclusion">
@@ -290,9 +301,9 @@
                 <div id="diag-susfs-features" class="feature-chips-container">
                     <span class="feature-chip">CONFIG_KSU_SUSFS</span>
                 </div>
-                <details class="diag-raw-details">
-                    <summary class="diag-raw-summary">Raw Output (ksu_susfs show)</summary>
-                    <pre id="diag-raw-output" class="diag-raw-pre">Checking kernel...</pre>
+                <details class="diag-raw-details" open>
+                    <summary class="diag-raw-summary">SUSFS Background Activity Log</summary>
+                    <pre id="diag-raw-output" class="diag-raw-pre">Loading SUSFS background activity log...</pre>
                 </details>
             </div>
             <div class="md-dialog-actions">

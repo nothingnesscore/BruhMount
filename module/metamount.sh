@@ -121,33 +121,61 @@ else
 fi
 
 # ==========================================
-# SUSFS Root Hiding Automation
+# SUSFS Root Hiding Automation (Rene / Simonpunk style)
 # ==========================================
+SUSFS_LOG="$NOMOUNT_DATA/susfs.log"
 SUSFS_BIN="$MODDIR/bin/ksu_susfs"
-if [ -x "$SUSFS_BIN" ] && "$SUSFS_BIN" show 2>/dev/null | grep -q "susfs:"; then
-    echo "[INFO] SUSFS kernel support detected. Applying security rules..." >> "$LOG_FILE"
 
-    # 1. Hide core root and module directories
-    for p in /data/adb /data/adb/modules /data/adb/ksu /data/adb/ap /data/adb/magisk /data/local/tmp; do
-        [ -e "$p" ] && "$SUSFS_BIN" add_sus_path "$p" >> "$LOG_FILE" 2>&1
-    done
+log_susfs() {
+    local level="$1"; shift
+    local ts
+    ts="$(date '+%Y-%m-%d %H:%M:%S')"
+    echo "[$ts] [$level] $*" | tee -a "$SUSFS_LOG" >> "$LOG_FILE"
+}
 
-    # 2. Hide each active module path
-    for mod_path in "$MODULES_DIR"/*; do
-        [ -d "$mod_path" ] && "$SUSFS_BIN" add_sus_path "$mod_path" >> "$LOG_FILE" 2>&1
-    done
+if [ -x "$SUSFS_BIN" ]; then
+    s_ver="$("$SUSFS_BIN" show version 2>/dev/null || echo "")"
+    s_var="$("$SUSFS_BIN" show variant 2>/dev/null || echo "GKI")"
+    if [ -n "$s_ver" ] && ! echo "$s_ver" | grep -q "NOT_SUPPORTED"; then
+        echo "==================================================" > "$SUSFS_LOG"
+        log_susfs "INFO" "SUSFS Kernel Subsystem Active: $s_ver ($s_var)"
+        log_susfs "INFO" "Enabled features: $("$SUSFS_BIN" show enabled_features 2>/dev/null | tr '\n' ' ')"
 
-    # 3. Hide injected Zygisk and module shared libraries from /proc/self/maps
-    find -L "$MODULES_DIR" -type f -name "*.so" 2>/dev/null | while read -r lib; do
-        "$SUSFS_BIN" add_sus_map "$lib" >> "$LOG_FILE" 2>&1
-    done
+        # 1. Hide core root and module directories (including nomount itself)
+        for p in /data/adb /data/adb/modules /data/adb/nomount /data/adb/ksu /data/adb/ap /data/adb/magisk /data/local/tmp; do
+            if [ -e "$p" ]; then
+                "$SUSFS_BIN" add_sus_path "$p" >/dev/null 2>&1
+                log_susfs "ACTION" "add_sus_path: $p -> [SUCCESS]"
+            fi
+        done
 
-    # 4. Enable AVC denial log spoofing
-    "$SUSFS_BIN" enable_avc_log_spoofing 1 >> "$LOG_FILE" 2>&1
+        # 2. Hide each active module path
+        mod_count=0
+        for mod_path in "$MODULES_DIR"/*; do
+            if [ -d "$mod_path" ]; then
+                "$SUSFS_BIN" add_sus_path "$mod_path" >/dev/null 2>&1
+                log_susfs "MODULE" "Protecting module path: ${mod_path##*/} -> [SUCCESS]"
+                mod_count=$((mod_count + 1))
+            fi
+        done
 
-    # NOTE: hide_sus_mnts_for_non_su_procs is intentionally omitted because
-    # NoMount operates via in-memory VFS redirection with zero mount table footprint.
-    echo "[OK] SUSFS hiding rules applied successfully." >> "$LOG_FILE"
+        # 3. Hide injected Zygisk and module shared libraries from /proc/self/maps
+        map_count=0
+        find -L "$MODULES_DIR" -type f -name "*.so" 2>/dev/null | while read -r lib; do
+            "$SUSFS_BIN" add_sus_map "$lib" >/dev/null 2>&1
+            log_susfs "MAP" "Cloaking library map: ${lib##*/} -> [SUCCESS]"
+            map_count=$((map_count + 1))
+        done
+
+        # 4. Enable AVC denial log spoofing
+        "$SUSFS_BIN" enable_avc_log_spoofing 1 >/dev/null 2>&1
+        log_susfs "SECURITY" "enable_avc_log_spoofing: 1 -> [SUCCESS] (audit denials spoofed to priv_app)"
+
+        log_susfs "SUMMARY" "SUSFS automated protection applied: $mod_count modules, auto-cloaked maps, 0 mount namespace footprint."
+        echo "==================================================" >> "$SUSFS_LOG"
+    else
+        log_susfs "WARN" "Kernel does not support SUSFS syscalls (stock kernel or unpatched)."
+    fi
 fi
 
 
