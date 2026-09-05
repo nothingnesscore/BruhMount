@@ -5,8 +5,15 @@ import os
 import subprocess
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 def main():
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if bot_token.lower().startswith("bot"):
+        bot_token = bot_token[3:].strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "@bruhperidot").strip()
     module_zip = os.environ.get("MODULE_ZIP", "").strip()
     zip_name = os.environ.get("ZIP_NAME", "").strip()
@@ -92,15 +99,18 @@ Changelog:
 
     # Upload using curl for standard multipart handling
     curl_cmd = [
-        "curl", "-s", "-w", "\nHTTP_STATUS:%{http_code}",
+        "curl", "-sS", "-w", "\nHTTP_STATUS:%{http_code}",
         "-X", "POST", f"https://api.telegram.org/bot{bot_token}/sendDocument",
-        "-F", f"chat_id={chat_id}",
+        "--form-string", f"chat_id={chat_id}",
         "-F", f"document=@{module_zip};filename={zip_name}",
         "--form-string", f"caption={escaped_caption}",
-        "-F", "parse_mode=HTML"
+        "--form-string", "parse_mode=HTML"
     ]
 
     res = subprocess.run(curl_cmd, capture_output=True, text=True)
+    if res.returncode != 0:
+        print(f"::error title=Curl Failed::Curl exited with code {res.returncode}: {res.stderr.strip()}")
+
     out_lines = res.stdout.strip().split("\n")
     http_status = "0"
     body_lines = []
