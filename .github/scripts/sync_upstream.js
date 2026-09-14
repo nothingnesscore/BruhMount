@@ -228,6 +228,9 @@ async function main() {
         }
     }
 
+    // Always preserve BruhMount CI workflows at HEAD so GITHUB_TOKEN bot pushes are never rejected
+    run("git", ["checkout", "HEAD", "--", ".github/workflows/"]);
+
     // Run verification & sanity checks
     validateRepo();
 
