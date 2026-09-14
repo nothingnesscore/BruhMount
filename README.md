@@ -109,12 +109,12 @@ ksu_susfs add_sus_map <lib> # Mask mmapped shared library from /proc/self/maps
 
 ## 🤝 Credits & Acknowledgments
 
-BruhMount builds upon foundational open-source engineering:
+The core engineering and heavy lifting of this project belongs to **[maxsteeel](https://github.com/maxsteeel)**. BruhMount is built directly upon his work in **[NoMount](https://github.com/maxsteeel/nomount)** — specifically the kernel VFS path interception and Keyring IPC architecture. We have essentially taken bits and pieces of his codebase, paired it with SUSFS automation from the community, and tied it together as a metamodule inspired by the concept of **[ZeroMount](https://github.com/Enginex0)**.
 
-* **[maxsteeel](https://github.com/maxsteeel):** Creator of **[NoMount](https://github.com/maxsteeel/nomount)**, who pioneered the revolutionary in-memory VFS path redirection framework and Keyring IPC.
-* **[simonpunk](https://gitlab.com/simonpunk/susfs4ksu):** Creator of **SUSFS**, whose kernel-level hiding primitives form the security core of modern Android root concealment.
-* **[tiann](https://github.com/tiann):** Creator of **KernelSU**, reshaping Android root architecture.
-* **[Enginex0](https://github.com/Enginex0):** Creator of **ZeroMount**, whose modular VFS ideas inspired this unified approach.
+* **[maxsteeel](https://github.com/maxsteeel)** — Main codebase, kernel module implementation, and userspace loader for NoMount.
+* **[simonpunk](https://gitlab.com/simonpunk/susfs4ksu)** — SUSFS kernel hiding implementation and tooling.
+* **[Enginex0](https://github.com/Enginex0)** — ZeroMount concept and modular VFS metamodule inspiration.
+* **[tiann](https://github.com/tiann)** — KernelSU architecture.
 
 ---
 
