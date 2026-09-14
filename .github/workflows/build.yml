@@ -184,6 +184,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
           echo "[+] Preparing release asset..."
           cp "${MODULE_ZIP}" "$RUNNER_TEMP/BruhMount.zip"
 
@@ -253,8 +256,6 @@ jobs:
           echo "[+] Updating update.json in repository..."
           printf '{\n  "version": "%s (%s)",\n  "versionCode": %s,\n  "zipUrl": "https://github.com/nothingnesscore/BruhMount/releases/download/latest/BruhMount.zip",\n  "changelog": "https://raw.githubusercontent.com/nothingnesscore/BruhMount/master/changelog.md"\n}\n' "$BASE_VERSION" "$COMMIT_COUNT" "$VERSION_CODE" > update.json
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add update.json
           if ! git diff --staged --quiet; then
             git commit -m "chore(release): update update.json for version ${VERSION_CODE} [skip ci]"
