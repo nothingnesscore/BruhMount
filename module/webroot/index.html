@@ -21,6 +21,14 @@
             </div>
             <div id="view-home" class="view-content active">
                 <div class="header-title">BruhMount</div>
+                <div id="recovery-alert-card" class="recovery-banner" style="display: none;">
+                    <md-icon class="recovery-icon">warning</md-icon>
+                    <div class="recovery-text">
+                        <div class="recovery-title" id="recovery-title">Emergency Safe Mode Active</div>
+                        <div class="recovery-desc" id="recovery-desc">BruhMount bypassed module loading to prevent boot failure.</div>
+                    </div>
+                    <button type="button" class="btn-text recovery-dismiss-btn" id="btn-dismiss-safemode">Disable Safe Mode</button>
+                </div>
                 <div class="home-status-card">
                     <md-icon id="status-icon" class="status-icon">check_circle</md-icon>
                     <div class="status-text-col">
@@ -97,6 +105,47 @@
 
             <div id="view-exclusions" class="view-content">
                 <div class="header-title" data-i18n="nav_exclusions">Exclusions</div>
+                <div class="preset-section">
+                    <div class="preset-section-header" data-i18n="preset_targets_title">Quick Isolation Presets</div>
+                    <div class="preset-chips-scroll" id="preset-chips-list">
+                        <button type="button" class="preset-chip" data-pkg="com.google.android.gms" data-label="Google Play Services">
+                            <md-icon>shield</md-icon> <span>GMS</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.android.vending" data-label="Google Play Store">
+                            <md-icon>storefront</md-icon> <span>Play Store</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.google.android.apps.walletnfcrel" data-label="Google Wallet">
+                            <md-icon>account_balance_wallet</md-icon> <span>Wallet</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.google.android.apps.nbu.paisa.user" data-label="Google Pay">
+                            <md-icon>payments</md-icon> <span>GPay</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="io.github.vvb2060.mahoshojo" data-label="Momo">
+                            <md-icon>security</md-icon> <span>Momo</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.vvb2060.nd" data-label="Native Detector">
+                            <md-icon>troubleshoot</md-icon> <span>Native Detector</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="io.github.vvb2060.packagecheck" data-label="Applist Detector">
+                            <md-icon>rule</md-icon> <span>Applist Detector</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="io.github.vvb2060.keyattestation" data-label="Key Attestation">
+                            <md-icon>verified_user</md-icon> <span>Key Attestation</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.scottyab.rootbeer.sample" data-label="RootBeer Sample">
+                            <md-icon>sports_bar</md-icon> <span>RootBeer</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.microsoft.windowsintune.companyportal" data-label="Company Portal">
+                            <md-icon>business</md-icon> <span>Intune</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.google.android.gsf" data-label="Services Framework">
+                            <md-icon>layers</md-icon> <span>GSF</span>
+                        </button>
+                        <button type="button" class="preset-chip" data-pkg="com.nianticlabs.pokemongo" data-label="Pokémon GO">
+                            <md-icon>catching_pokemon</md-icon> <span>Pokémon GO</span>
+                        </button>
+                    </div>
+                </div>
                 <div id="exclusions-list" class="list"></div>
             </div>
 
@@ -115,6 +164,14 @@
                                 <span class="switch-thumb"></span>
                             </span>
                         </label>
+                    </div>
+
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="hardware_safe_mode">Hardware Recovery</h3>
+                            <p data-i18n="hardware_safe_mode_desc">Hold Volume-Down during early boot to force Safe Mode</p>
+                        </div>
+                        <md-icon style="color: var(--md-sys-color-primary); font-size: 24px;">settings_backup_restore</md-icon>
                     </div>
 
                     <div class="segment-card setting-item" id="lang-setting-card">
@@ -158,8 +215,11 @@
                     </div>
                 </div>
 
-                <div class="segment-section-label" data-i18n="susfs_security_title">SUSFS Security</div>
-                <div class="settings-segment-group">
+                <div class="segment-section-label" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span data-i18n="susfs_security_title">SUSFS Security</span>
+                    <span id="susfs-options-badge" class="susfs-version-badge"></span>
+                </div>
+                <div class="settings-segment-group" id="susfs-switches-group">
                     <div class="segment-card setting-item">
                         <div class="setting-text">
                             <h3 data-i18n="susfs_avc_spoof">SELinux AVC Spoofing</h3>
@@ -167,6 +227,71 @@
                         </div>
                         <label class="custom-switch" id="setting-susfs-avc">
                             <input type="checkbox" class="switch-input" aria-label="SELinux AVC Spoofing" checked>
+                            <span class="switch-track">
+                                <span class="switch-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="susfs_path_hide">SUSFS Path Hiding</h3>
+                            <p data-i18n="susfs_path_hide_desc">Conceal /data/adb, modules, and root paths</p>
+                        </div>
+                        <label class="custom-switch" id="setting-susfs-path">
+                            <input type="checkbox" class="switch-input" aria-label="SUSFS Path Hiding" checked>
+                            <span class="switch-track">
+                                <span class="switch-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="susfs_map_hide">Memory Maps Cloaking</h3>
+                            <p data-i18n="susfs_map_hide_desc">Mask module .so libraries in /proc/*/maps</p>
+                        </div>
+                        <label class="custom-switch" id="setting-susfs-map">
+                            <input type="checkbox" class="switch-input" aria-label="Memory Maps Cloaking" checked>
+                            <span class="switch-track">
+                                <span class="switch-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="susfs_mount_hide">Non-SU Mount Hiding</h3>
+                            <p data-i18n="susfs_mount_hide_desc">Hide root and KSU mount points from non-su apps</p>
+                        </div>
+                        <label class="custom-switch" id="setting-susfs-mount">
+                            <input type="checkbox" class="switch-input" aria-label="Non-SU Mount Hiding" checked>
+                            <span class="switch-track">
+                                <span class="switch-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="susfs_kstat_spoof">Kstat Inode & Dev Spoofing</h3>
+                            <p data-i18n="susfs_kstat_spoof_desc">Spoof file inode and device numbers to stock values</p>
+                        </div>
+                        <label class="custom-switch" id="setting-susfs-kstat">
+                            <input type="checkbox" class="switch-input" aria-label="Kstat Inode & Dev Spoofing" checked>
+                            <span class="switch-track">
+                                <span class="switch-thumb"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="segment-card setting-item">
+                        <div class="setting-text">
+                            <h3 data-i18n="susfs_kernel_log">Silence SUSFS Kernel Log</h3>
+                            <p data-i18n="susfs_kernel_log_desc">Disable dmesg logging to evade /dev/kmsg checks</p>
+                        </div>
+                        <label class="custom-switch" id="setting-susfs-klog">
+                            <input type="checkbox" class="switch-input" aria-label="Silence SUSFS Kernel Log" checked>
                             <span class="switch-track">
                                 <span class="switch-thumb"></span>
                             </span>
@@ -292,6 +417,26 @@
                 <div class="diag-row">
                     <span class="diag-label">AVC Denial Spoofing</span>
                     <span class="diag-value" id="diag-susfs-avc">Active</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Non-SU Mount Hiding</span>
+                    <span class="diag-value" id="diag-susfs-mount">Active</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Path Hiding</span>
+                    <span class="diag-value" id="diag-susfs-path">Active</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Maps Cloaking</span>
+                    <span class="diag-value" id="diag-susfs-map">Active</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Kstat Spoofing</span>
+                    <span class="diag-value" id="diag-susfs-kstat">Active</span>
+                </div>
+                <div class="diag-row">
+                    <span class="diag-label">Kernel Log Output</span>
+                    <span class="diag-value" id="diag-susfs-klog">Silenced</span>
                 </div>
                 <div class="diag-row">
                     <span class="diag-label">Mount Footprint</span>

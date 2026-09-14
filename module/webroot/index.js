@@ -51,7 +51,7 @@ let activeLocale = 'en', translations = {};
 
 const TPL_RE = /{{\s*([^\s}]+(?:[ \t]+[^\s}]+)*)\s*}}/g;
 const translate = (key, reps) => {
-    const str = translations[key] ?? key;
+    const str = translations[key] ?? translationsCache['en']?.[key] ?? key;
 
     return reps
         ? String(str).replace(TPL_RE, (_, n) => {
@@ -71,6 +71,13 @@ let cachedI18nNodes = null;
 
 async function setAppLocale(locale, refreshView = true) {
     activeLocale = locale in LOCALE_NAMES ? locale : 'en';
+
+    if (!translationsCache['en']) {
+        try {
+            const resEn = await fetch('./locales/en.json');
+            translationsCache['en'] = resEn.ok ? await resEn.json() : {};
+        } catch { translationsCache['en'] = {}; }
+    }
 
     if (!translationsCache[activeLocale]) {
         try {
@@ -193,7 +200,19 @@ const ICON_PATHS = {
     shield: 'M467-85q-6-1-12-3-135-45-215-166.5T160-516v-189q0-25 14.5-45t37.5-29l240-90q14-5 28-5t28 5l240 90q23 9 37.5 29t14.5 45v189q0 140-80 261.5T505-88q-6 2-12 3t-13 1q-7 0-13-1Zm13-79q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Zm0-316Z',
     smartphone: 'M680-920H280c-44 0-80 36-80 80v720c0 44 36 80 80 80h400c44 0 80-36 80-80v-720c0-44-36-80-80-80Zm0 720H280v-600h400v600Zm-120 80h-160v-40h160v40Z',
     edit: 'M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z',
-    check: 'M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z'
+    check: 'M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z',
+    warning: 'M40-160 480-840 920-160H40Zm124-80h632L480-692 164-240Zm316-60q17 0 28.5-11.5T520-340q0-17-11.5-28.5T480-380q-17 0-28.5 11.5T440-340q0 17 11.5 28.5T480-300Zm-40-120h80v-160h-80v160Zm40-20Z',
+    storefront: 'M160-120v-160H80v-80l40-280h720l40 280v80h-80v160H160Zm80-80h480v-80H240v80Zm-40-160h560l-28-200H228l-28 200Zm120-40q25 0 42.5-17.5T380-460q0-25-17.5-42.5T320-520q-25 0-42.5 17.5T260-460q0 25 17.5 42.5T320-400Zm160 0q25 0 42.5-17.5T540-460q0-25-17.5-42.5T480-520q-25 0-42.5 17.5T420-460q0 25 17.5 42.5T480-400Zm160 0q25 0 42.5-17.5T700-460q0-25-17.5-42.5T640-520q-25 0-42.5 17.5T580-460q0 25 17.5 42.5T640-400ZM240-200v-80 80Z',
+    account_balance_wallet: 'M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h600q33 0 56.5 23.5T840-720v160h-80v-160H160v480h600v-160h80v160q0 33-23.5 56.5T760-160H160Zm520-240q-33 0-56.5-23.5T600-480q0-33 23.5-56.5T680-560h160v160H680Zm40-60q17 0 28.5-11.5T760-480q0-17-11.5-28.5T720-520q-17 0-28.5 11.5T680-480q0 17 11.5 28.5T720-460ZM160-720v480-480Z',
+    payments: 'M240-240q-33 0-56.5-23.5T160-320v-400q0-33 23.5-56.5T240-800h560q33 0 56.5 23.5T880-720v400q0 33-23.5 56.5T800-240H240Zm0-80h560v-400H240v400Zm280-80q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35ZM80-160v-480h80v480h640v80H160q-33 0-56.5-23.5T80-160Zm160-160v-400 400Z',
+    troubleshoot: 'M720-120v-120H600v-80h120v-120h80v120h120v80H800v120h-80ZM400-200q-134 0-227-93t-93-227q0-134 93-227t227-93q134 0 227 93t93 227q0 38-8.5 73.5T786-480q-17-13-37-20t-41-7q-62 0-107 41t-53 102q-36 18-72.5 27t-75.5 9Zm0-80q48 0 91.5-16t78.5-46q10-53 47-92.5t91-51.5q6-17 9-36t3-38q0-100-70-170t-170-70q-100 0-170 70t-70 170q0 100 70 170t170 70Zm-40-160q-17 0-28.5-11.5T320-480q0-17 11.5-28.5T360-520q17 0 28.5 11.5T400-480q0 17-11.5 28.5T360-440Zm120-120q-17 0-28.5-11.5T440-600q0-17 11.5-28.5T480-640q17 0 28.5 11.5T520-600q0 17-11.5 28.5T480-560Z',
+    rule: 'M268-240 42-466l57-56 169 170 380-380 57 56-437 436Zm372-80v-80h240v80H640Zm0-160v-80h240v80H640Zm0-160v-80h240v80H640Z',
+    verified_user: 'm480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm-60-280 226-226-56-56-170 170-86-86-56 56 142 142Zm60 196q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Z',
+    sports_bar: 'M240-80v-80h480v80H240Zm40-160v-400h-80q-33 0-56.5-23.5T120-720q0-33 23.5-56.5T200-800h560q33 0 56.5 23.5T840-720v160q0 33-23.5 56.5T760-480h-80v240H280Zm400-320h80v-160h-80v160Zm-320 240h240v-400H360v400Z',
+    business: 'M80-160v-640h480v160h320v480H80Zm80-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 480h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 480h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 480h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Z',
+    layers: 'M480-120 120-400l86-66 274 212 274-212 86 66-360 280Zm0-170-360-280 360-280 360 280-360 280Zm0-466-242 186 242 188 242-188-242-186Zm0 316-274-212-86 66 360 280 360-280-86-66-274 212Z',
+    catching_pokemon: 'M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-82q139-12 233-107.5T818-520H634q-18 48-58.5 78.5T480-411q-55 0-95.5-30.5T326-520H142q11 144 105 239.5T480-162Zm0-318q25 0 42.5-17.5T540-540q0-25-17.5-42.5T480-600q-25 0-42.5 17.5T420-540q0 25 17.5 42.5T480-480Zm0-131q55 0 95.5 30.5T634-440h184q-11-144-105-239.5T480-774q-139 12-233 107.5T142-440h184q18-48 58.5-78.5T480-549Z',
+    settings_backup_restore: 'M480-80q-134 0-233-80T126-360h84q20 96 95 158t175 62q116 0 198-82t82-198q0-116-82-198t-198-82q-72 0-134 34t-98 94l98 96H120v-208l78 78q48-74 122-117t160-43q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-40-200v-240h80v240h-80Z'
 };
 
 const FILLED_ICON_PATHS = {
@@ -293,10 +312,139 @@ function updateTopAppBar() {
     UI.bar.setAttribute('aria-hidden', titleOpacity > 0.5 ? 'false' : 'true');
 }
 
-function initNavigation() {
+const VIEW_IDS = ['view-home', 'view-modules', 'view-exclusions', 'view-options'];
+
+function switchToView(targetId, direction = 'none') {
+    if (!VIEW_IDS.includes(targetId) || targetId === currentActiveViewId) return;
+
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view-content');
     const fab = document.getElementById('fab-container');
+
+    // Update nav items active state and icon variants
+    navItems.forEach(nav => {
+        const isTarget = (nav.dataset.target === targetId);
+        nav.classList.toggle('active', isTarget);
+        const iconEl = nav.querySelector('md-icon');
+        if (iconEl) {
+            const iconName = iconEl.dataset.icon || iconEl.textContent.trim();
+            setIcon(iconEl, iconName, isTarget ? 'filled' : 'outline');
+        }
+    });
+
+    // Update views with directional slide animations
+    views.forEach(v => {
+        v.classList.remove('active', 'slide-in-right', 'slide-in-left');
+    });
+
+    const targetView = document.getElementById(targetId);
+    if (!targetView) return;
+
+    targetView.classList.add('active');
+    if (direction === 'next') {
+        targetView.classList.add('slide-in-right');
+    } else if (direction === 'prev') {
+        targetView.classList.add('slide-in-left');
+    }
+
+    currentActiveViewId = targetId;
+    currentActiveViewTitle = targetView.querySelector('.header-title')?.textContent?.trim() || '';
+
+    updateTopAppBar();
+    fab.classList.toggle('visible', targetId === 'view-exclusions');
+
+    // Scroll page container to top on view switch
+    const pageContainer = document.querySelector('.page-container');
+    if (pageContainer) pageContainer.scrollTop = 0;
+
+    setTimeout(() => {
+        if (!viewLoadState[targetId]) {
+            viewLoadState[targetId] = true;
+            if (targetId === 'view-home') loadHome();
+            else if (targetId === 'view-modules') loadModules();
+            else if (targetId === 'view-exclusions') loadExclusions();
+            else if (targetId === 'view-options') loadOptions();
+        }
+    }, 0);
+}
+
+function attachSwipeNavigation() {
+    const pageContainer = document.querySelector('.page-container');
+    if (!pageContainer) return;
+
+    let startX = 0, startY = 0, startTime = 0;
+    let isTracking = false;
+
+    pageContainer.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) {
+            isTracking = false;
+            return;
+        }
+
+        // Do not intercept if a modal or dialog is open
+        if (document.querySelector('.modal-overlay.active')) {
+            isTracking = false;
+            return;
+        }
+
+        // Do not intercept inside horizontal scrolls or interactive form inputs
+        const target = e.target;
+        if (target.closest('.preset-chips-scroll, .theme-segmented-control, .custom-select-wrapper, input, textarea, select, pre, code')) {
+            isTracking = false;
+            return;
+        }
+
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startTime = Date.now();
+        isTracking = true;
+    }, { passive: true });
+
+    pageContainer.addEventListener('touchmove', (e) => {
+        if (!isTracking || e.touches.length !== 1) return;
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const dx = currentX - startX;
+        const dy = currentY - startY;
+
+        // Cancel horizontal swipe if vertical scroll dominates
+        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 20) {
+            isTracking = false;
+        }
+    }, { passive: true });
+
+    pageContainer.addEventListener('touchend', (e) => {
+        if (!isTracking) return;
+        isTracking = false;
+
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const duration = Date.now() - startTime;
+
+        // Minimum swipe distance of 50px, duration under 600ms, predominantly horizontal
+        const isHorizontalSwipe = (Math.abs(dx) > 50) && (Math.abs(dx) > 1.6 * Math.abs(dy)) && (duration < 600);
+        if (!isHorizontalSwipe) return;
+
+        const isRtl = (document.documentElement.dir === 'rtl');
+        const currentIndex = VIEW_IDS.indexOf(currentActiveViewId);
+        if (currentIndex === -1) return;
+
+        // Swipe left (dx < 0): navigate to next tab in LTR, prev in RTL
+        // Swipe right (dx > 0): navigate to prev tab in LTR, next in RTL
+        const swipeNext = isRtl ? (dx > 0) : (dx < 0);
+
+        if (swipeNext && currentIndex < VIEW_IDS.length - 1) {
+            switchToView(VIEW_IDS[currentIndex + 1], 'next');
+        } else if (!swipeNext && currentIndex > 0) {
+            switchToView(VIEW_IDS[currentIndex - 1], 'prev');
+        }
+    }, { passive: true });
+}
+
+function initNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
 
     navItems.forEach(item => {
         const iconEl = item.querySelector('md-icon');
@@ -306,35 +454,15 @@ function initNavigation() {
         }
 
         item.addEventListener('click', () => {
-            navItems.forEach(nav => {
-                nav.classList.remove('active');
-                const i = nav.querySelector('md-icon');
-                if (i) setIcon(i, (i.dataset.icon || i.textContent.trim()), nav === item ? 'filled' : 'outline');
-            });
-            item.classList.add('active');
             const target = item.dataset.target;
-            
-            views.forEach(v => v.classList.remove('active'));
-            const targetView = document.getElementById(target);
-            targetView.classList.add('active');
-            
-            currentActiveViewId = target;
-            currentActiveViewTitle = targetView.querySelector('.header-title')?.textContent?.trim() || '';
-            
-            updateTopAppBar();
-            fab.classList.toggle('visible', target === 'view-exclusions');
-
-            setTimeout(() => {
-                if (!viewLoadState[target]) {
-                    viewLoadState[target] = true;
-                    if (target === 'view-home') loadHome();
-                    else if (target === 'view-modules') loadModules();
-                    else if (target === 'view-exclusions') loadExclusions();
-                    else if (target === 'view-options') loadOptions();
-                }
-            }, 0);
+            const currentIdx = VIEW_IDS.indexOf(currentActiveViewId);
+            const targetIdx = VIEW_IDS.indexOf(target);
+            const direction = targetIdx > currentIdx ? 'next' : (targetIdx < currentIdx ? 'prev' : 'none');
+            switchToView(target, direction);
         });
     });
+
+    attachSwipeNavigation();
 }
 
 // Theme Engine & HyperOS Detection
@@ -400,12 +528,45 @@ function applyAmoled(enable) {
     }
 }
 
-// SUSFS Live Diagnostics Engine
+// SUSFS Configuration & State Engine
+const SUSFS_CONFIG_FILE = `${NM_DATA}/susfs_config.json`;
+
+const defaultSusfsConfig = {
+    susfs_path_hide: true,
+    susfs_map_hide: true,
+    susfs_avc_spoof: true,
+    susfs_hide_mounts: true,
+    susfs_kstat_spoof: true,
+    susfs_kernel_log: false
+};
+
+async function readSusfsConfig() {
+    try {
+        const { stdout } = await exec(`cat ${SUSFS_CONFIG_FILE} 2>/dev/null || echo "{}"`);
+        const parsed = JSON.parse(stdout.trim() || "{}");
+        return { ...defaultSusfsConfig, ...parsed };
+    } catch {
+        return { ...defaultSusfsConfig };
+    }
+}
+
+async function writeSusfsConfig(conf) {
+    const jsonStr = JSON.stringify(conf, null, 2);
+    const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+    return await exec(`mkdir -p ${NM_DATA} && echo "${b64}" | base64 -d > ${SUSFS_CONFIG_FILE}.tmp && mv -f ${SUSFS_CONFIG_FILE}.tmp ${SUSFS_CONFIG_FILE}`);
+}
+
 let susfsCache = {
     active: false,
     version: '',
     variant: 'GKI',
+    config: { ...defaultSusfsConfig },
     avcSpoof: true,
+    pathHide: true,
+    mapHide: true,
+    mountHide: true,
+    kstatSpoof: true,
+    kernelLog: false,
     features: [],
     raw: ''
 };
@@ -434,18 +595,25 @@ async function querySusfs() {
 
         const active = !!(ver && !ver.includes('NOT_SUPPORTED') && !ver.includes('error'));
         const featureList = features ? features.split('\n').map(f => f.trim()).filter(Boolean) : [];
+        const conf = await readSusfsConfig();
 
         susfsCache = {
             active,
             version: active ? (ver.startsWith('v') ? ver : `v${ver}`) : '',
             variant: active ? (variant || 'GKI') : '',
-            avcSpoof: true,
+            config: conf,
+            avcSpoof: !!conf.susfs_avc_spoof,
+            pathHide: !!conf.susfs_path_hide,
+            mapHide: !!conf.susfs_map_hide,
+            mountHide: !!conf.susfs_hide_mounts,
+            kstatSpoof: !!conf.susfs_kstat_spoof,
+            kernelLog: !!conf.susfs_kernel_log,
             features: featureList,
             raw: susfsLog || (active ? `[SUSFS] Kernel Subsystem Active (${variant || 'GKI'})` : 'Kernel does not support SUSFS syscalls.')
         };
         return susfsCache;
     } catch (e) {
-        susfsCache = { active: false, version: '', variant: '', avcSpoof: false, features: [], raw: e?.message || '' };
+        susfsCache = { active: false, version: '', variant: '', config: { ...defaultSusfsConfig }, avcSpoof: false, pathHide: false, mapHide: false, mountHide: false, kstatSpoof: false, kernelLog: false, features: [], raw: e?.message || '' };
         return susfsCache;
     }
 }
@@ -470,6 +638,8 @@ async function loadHome() {
         cat "${NM_MODE_FILE}" 2>/dev/null || echo "unavailable"; echo "|||"
         if [ -x "${SUSFS_BIN}" ]; then ${SUSFS_BIN} show version 2>/dev/null || ${SUSFS_BIN} show 2>/dev/null | head -5; else echo ""; fi; echo "|||"
         getprop ro.mi.os.version.name 2>/dev/null; [ -z "$(getprop ro.mi.os.version.name)" ] && getprop ro.miui.ui.version.name 2>/dev/null; echo "|||"
+        if [ -f "${MOD_DIR}/${MOD_ID}/disable" ] || [ -f "${MOD_DIR}/nomount/disable" ] || [ -f "/data/adb/nomount/safemode" ]; then echo "safemode"; elif [ -f "/data/adb/nomount/.quarantined" ] || grep -q "⚠️ RECOVERY:" "${MOD_DIR}/${MOD_ID}/module.prop" 2>/dev/null || grep -q "⚠️ RECOVERY:" "${MOD_DIR}/nomount/module.prop" 2>/dev/null; then echo "quarantined"; else echo "normal"; fi; echo "|||"
+        if [ -f "/data/adb/nomount/recovery.log" ]; then tail -n 2 "/data/adb/nomount/recovery.log" | head -n1; else echo ""; fi; echo "|||"
     `;
 
     try {
@@ -502,6 +672,54 @@ async function loadHome() {
         const nmMode = (parts[7] || 'unavailable').trim();
         const susfsRaw = (parts[8] || '').trim();
         const miuiVer = (parts[9] || '').trim();
+        const safeStatus = (parts[10] || 'normal').trim();
+        const recoveryMsg = (parts[11] || '').trim();
+
+        // Check and render safe mode recovery banner
+        const banner = document.getElementById('recovery-alert-card');
+        if (banner) {
+            if (safeStatus === 'safemode') {
+                banner.style.display = 'flex';
+                const recTitle = document.getElementById('recovery-title');
+                const recDesc = document.getElementById('recovery-desc');
+                if (recTitle) recTitle.textContent = 'Emergency Safe Mode Active';
+                if (recDesc) recDesc.textContent = recoveryMsg || 'BruhMount bypassed module loading to prevent boot failure.';
+                const dismissBtn = document.getElementById('btn-dismiss-safemode');
+                if (dismissBtn) {
+                    dismissBtn.textContent = 'Disable Safe Mode';
+                    if (!dismissBtn.dataset.bound) {
+                        dismissBtn.dataset.bound = '1';
+                        dismissBtn.onclick = async () => {
+                            await exec(`rm -f ${FILES.disable} ${NM_DATA}/safemode ${NM_DATA}/.quarantined ${NM_DATA}/recovery.log ${NM_DATA}/.booting ${NM_DATA}/.boot_count /cache/.bruhmount_safemode`);
+                            banner.style.display = 'none';
+                            showToast('Safe mode cleared. Reboot to restore VFS injection.');
+                            loadHome();
+                        };
+                    }
+                }
+            } else if (safeStatus === 'quarantined') {
+                banner.style.display = 'flex';
+                const recTitle = document.getElementById('recovery-title');
+                const recDesc = document.getElementById('recovery-desc');
+                if (recTitle) recTitle.textContent = 'Faulty Module Isolated';
+                if (recDesc) recDesc.textContent = recoveryMsg || 'A faulty module was quarantined to restore system stability.';
+                const dismissBtn = document.getElementById('btn-dismiss-safemode');
+                if (dismissBtn) {
+                    dismissBtn.textContent = 'Dismiss Alert';
+                    if (!dismissBtn.dataset.bound) {
+                        dismissBtn.dataset.bound = '1';
+                        dismissBtn.onclick = async () => {
+                            await exec(`rm -f ${NM_DATA}/.quarantined ${NM_DATA}/recovery.log; sed -i "s|^description=.*|description=Unified NoMount VFS Metamodule with Built-in SUSFS Automation. Zero mount table footprint.|" "${MOD_DIR}/${MOD_ID}/module.prop" 2>/dev/null || true`);
+                            banner.style.display = 'none';
+                            showToast('Quarantine alert dismissed.');
+                            loadHome();
+                        };
+                    }
+                }
+            } else {
+                banner.style.display = 'none';
+            }
+        }
 
         let androidDisplay = unk;
         if (aRel && aRel !== unk) {
@@ -608,6 +826,21 @@ function openSusfsDiagModal() {
 
     const avcEl = document.getElementById('diag-susfs-avc');
     if (avcEl) avcEl.textContent = susfsCache.avcSpoof ? 'Active (u:r:priv_app)' : 'Disabled';
+
+    const mountEl = document.getElementById('diag-susfs-mount');
+    if (mountEl) mountEl.textContent = susfsCache.mountHide ? 'Active (Hidden for non-su)' : 'Disabled';
+
+    const pathEl = document.getElementById('diag-susfs-path');
+    if (pathEl) pathEl.textContent = susfsCache.pathHide ? 'Active (Root & Modules)' : 'Disabled';
+
+    const mapEl = document.getElementById('diag-susfs-map');
+    if (mapEl) mapEl.textContent = susfsCache.mapHide ? 'Active (Cloaking *.so)' : 'Disabled';
+
+    const kstatEl = document.getElementById('diag-susfs-kstat');
+    if (kstatEl) kstatEl.textContent = susfsCache.kstatSpoof ? 'Active (Stock attributes)' : 'Disabled';
+
+    const klogEl = document.getElementById('diag-susfs-klog');
+    if (klogEl) klogEl.textContent = susfsCache.kernelLog ? 'Enabled (Verbose)' : 'Silenced (Anti-detection)';
 
     const featContainer = document.getElementById('diag-susfs-features');
     if (featContainer) {
@@ -812,6 +1045,56 @@ async function writeExclusionsJson(dataArray) {
     return await exec(cmd);
 }
 
+async function handlePresetClick(chipEl) {
+    const pkg = chipEl.dataset.pkg;
+    const label = chipEl.dataset.label;
+    if (!pkg) return;
+
+    try {
+        const savedData = await readExclusionsJson();
+        const existing = savedData.find(a => a.pkg === pkg);
+        if (existing) {
+            // Toggle off isolation
+            showToast(translate('unblocking_name', { name: label }) || `Removing ${label}...`);
+            await exec(`${NM_BIN} uid del ${existing.uid}`);
+            const newData = savedData.filter(a => a.pkg !== pkg && String(a.uid) !== String(existing.uid));
+            await writeExclusionsJson(newData);
+            await loadExclusions();
+            showToast(`Removed ${label} from isolation`);
+            return;
+        }
+
+        showToast(`Locating ${label}...`);
+        let uid = null;
+
+        // 1. Search in cached apps list
+        const cached = allAppsCache.find(a => a.packageName === pkg);
+        if (cached && cached.uid) uid = String(cached.uid);
+
+        // 2. Query pm list packages -U
+        if (!uid) {
+            const { stdout } = await exec(`pm list packages -U --user 0 2>/dev/null | grep -E '^package:${pkg}[[:space:]]' | head -n1`);
+            const m = stdout.match(/uid:(\d+)/);
+            if (m) uid = m[1];
+        }
+
+        // 3. Fallback to dumpsys package
+        if (!uid) {
+            const { stdout } = await exec(`dumpsys package ${pkg} 2>/dev/null | grep -m1 'userId=' | cut -d= -f2 | tr -d ' \r\n'`);
+            if (stdout && /^\d+$/.test(stdout)) uid = stdout;
+        }
+
+        if (!uid) {
+            showToast(`Package ${pkg} not found on this device.`);
+            return;
+        }
+
+        await addExclusion(uid, label, pkg);
+    } catch (e) {
+        showToast(`Failed to toggle ${label}: ${e.message}`);
+    }
+}
+
 async function loadExclusions() {
     const listContainer = document.getElementById('exclusions-list');
     if (!listContainer) return;
@@ -827,6 +1110,14 @@ async function loadExclusions() {
 
         const savedData = await readExclusionsJson();
         const appsMap = new Map(savedData.map(app => [String(app.uid), app]));
+
+        // Sync preset chips active state
+        const presetChips = document.querySelectorAll('#preset-chips-list .preset-chip');
+        presetChips.forEach(chip => {
+            const pkg = chip.dataset.pkg;
+            const isExcluded = savedData.some(a => a.pkg === pkg);
+            chip.classList.toggle('active', isExcluded);
+        });
 
         const htmlArr = blockedUids.map(uid => {
             const app = appsMap.get(uid);
@@ -1073,6 +1364,14 @@ async function removeExclusion(uid, name, domItem) {
         const listContainer = document.getElementById('exclusions-list');
         if (listContainer.children.length === 0)
             renderEmptyState(listContainer, '(._.)', translate('no_exclusions_yet'));
+
+        // Update preset chip states
+        const presetChips = document.querySelectorAll('#preset-chips-list .preset-chip');
+        presetChips.forEach(chip => {
+            const chipPkg = chip.dataset.pkg;
+            const isExcluded = newData.some(a => a.pkg === chipPkg);
+            chip.classList.toggle('active', isExcluded);
+        });
     } catch {
         showToast(translate('error_unblocking'));
         domItem.style.opacity = '1';
@@ -1132,9 +1431,17 @@ function renderThemePicker() {
 async function loadOptions() {
     renderThemePicker();
 
+    // Query latest SUSFS state & configuration
+    await querySusfs();
+
     const swSafe = document.querySelector('#setting-safemode input'),
           btnClear = document.getElementById('btn-clear-rules'),
           swAvc = document.querySelector('#setting-susfs-avc input'),
+          swPath = document.querySelector('#setting-susfs-path input'),
+          swMap = document.querySelector('#setting-susfs-map input'),
+          swMount = document.querySelector('#setting-susfs-mount input'),
+          swKstat = document.querySelector('#setting-susfs-kstat input'),
+          swKlog = document.querySelector('#setting-susfs-klog input'),
           btnRefreshSusfs = document.getElementById('btn-refresh-susfs'),
           swAmoled = document.querySelector('#switch-amoled input');
 
@@ -1149,17 +1456,108 @@ async function loadOptions() {
     }
 
     if (swSafe) {
-        swSafe.checked = (await exec(`[ -f ${FILES.disable} ] && echo yes`)).stdout.includes('yes');
-        swSafe.onchange = e => exec(e.target.checked ? `touch ${FILES.disable}` : `rm ${FILES.disable}`);
+        const { stdout } = await exec(`[ -f ${FILES.disable} ] || [ -f ${NM_DATA}/safemode ] && echo yes`);
+        swSafe.checked = stdout.includes('yes');
+        swSafe.onchange = async (e) => {
+            if (e.target.checked) {
+                await exec(`touch ${FILES.disable} ${NM_DATA}/safemode`);
+                showToast('Safe Mode: Enabled for next boot');
+            } else {
+                await exec(`rm -f ${FILES.disable} ${NM_DATA}/safemode ${NM_DATA}/.booting ${NM_DATA}/.boot_count`);
+                showToast('Safe Mode: Disabled');
+            }
+        };
     }
 
+    // SUSFS Status Badge & Group State
+    const susfsOptionsBadge = document.getElementById('susfs-options-badge');
+    const susfsSwitchesGroup = document.getElementById('susfs-switches-group');
+
+    if (susfsOptionsBadge) {
+        if (susfsCache.active) {
+            susfsOptionsBadge.textContent = susfsCache.version || translate('susfs_active');
+            susfsOptionsBadge.className = 'susfs-version-badge active';
+        } else {
+            susfsOptionsBadge.textContent = translate('susfs_inactive');
+            susfsOptionsBadge.className = 'susfs-version-badge inactive';
+        }
+    }
+
+    if (susfsSwitchesGroup) {
+        susfsSwitchesGroup.classList.toggle('disabled-group', !susfsCache.active);
+        susfsSwitchesGroup.querySelectorAll('.switch-input').forEach(inp => {
+            inp.disabled = !susfsCache.active;
+        });
+    }
+
+    // SUSFS Toggles Wiring
     if (swAvc) {
         swAvc.checked = susfsCache.avcSpoof;
         swAvc.onchange = async (e) => {
             const val = e.target.checked ? '1' : '0';
             await exec(`${SUSFS_BIN} enable_avc_log_spoofing ${val} 2>/dev/null`);
+            susfsCache.config.susfs_avc_spoof = e.target.checked;
             susfsCache.avcSpoof = e.target.checked;
-            showToast(`AVC log spoofing: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+            await writeSusfsConfig(susfsCache.config);
+            showToast(`SELinux AVC Spoofing: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+        };
+    }
+
+    if (swPath) {
+        swPath.checked = susfsCache.pathHide;
+        swPath.onchange = async (e) => {
+            susfsCache.config.susfs_path_hide = e.target.checked;
+            susfsCache.pathHide = e.target.checked;
+            await writeSusfsConfig(susfsCache.config);
+            showToast(`Path Hiding: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+            if (e.target.checked && btnRefreshSusfs) btnRefreshSusfs.click();
+        };
+    }
+
+    if (swMap) {
+        swMap.checked = susfsCache.mapHide;
+        swMap.onchange = async (e) => {
+            susfsCache.config.susfs_map_hide = e.target.checked;
+            susfsCache.mapHide = e.target.checked;
+            await writeSusfsConfig(susfsCache.config);
+            showToast(`Maps Cloaking: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+            if (e.target.checked && btnRefreshSusfs) btnRefreshSusfs.click();
+        };
+    }
+
+    if (swMount) {
+        swMount.checked = susfsCache.mountHide;
+        swMount.onchange = async (e) => {
+            const val = e.target.checked ? '1' : '0';
+            await exec(`${SUSFS_BIN} hide_sus_mnts_for_non_su_procs ${val} 2>/dev/null`);
+            susfsCache.config.susfs_hide_mounts = e.target.checked;
+            susfsCache.mountHide = e.target.checked;
+            await writeSusfsConfig(susfsCache.config);
+            showToast(`Non-SU Mount Hiding: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+        };
+    }
+
+    if (swKstat) {
+        swKstat.checked = susfsCache.kstatSpoof;
+        swKstat.onchange = async (e) => {
+            susfsCache.config.susfs_kstat_spoof = e.target.checked;
+            susfsCache.kstatSpoof = e.target.checked;
+            await writeSusfsConfig(susfsCache.config);
+            showToast(`Kstat Spoofing: ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+            if (e.target.checked && btnRefreshSusfs) btnRefreshSusfs.click();
+        };
+    }
+
+    if (swKlog) {
+        // Checked means silenced (kernel log disabled for stealth)
+        swKlog.checked = !susfsCache.kernelLog;
+        swKlog.onchange = async (e) => {
+            const kLogVal = e.target.checked ? '0' : '1';
+            await exec(`${SUSFS_BIN} enable_log ${kLogVal} 2>/dev/null`);
+            susfsCache.config.susfs_kernel_log = !e.target.checked;
+            susfsCache.kernelLog = !e.target.checked;
+            await writeSusfsConfig(susfsCache.config);
+            showToast(`Kernel Log Silencing: ${e.target.checked ? 'Silenced (Stealth)' : 'Active (Verbose)'}`);
         };
     }
 
@@ -1168,30 +1566,101 @@ async function loadOptions() {
             showToast('Applying SUSFS security rules...');
             const refreshScript = `
                 SUSFS_LOG="${NM_DATA}/susfs.log"
+                SUSFS_CONF="${NM_DATA}/susfs_config.json"
                 log_s() {
                     local ts; ts="$(date '+%Y-%m-%d %H:%M:%S')"
                     echo "[$ts] [\$1] \$2" >> "$SUSFS_LOG"
                 }
+
+                get_c() {
+                    local key="\$1"
+                    local d="\$2"
+                    if [ -f "$SUSFS_CONF" ]; then
+                        local v; v="$(grep -o "\"$key\":[[:space:]]*[a-zA-Z0-9_]*" "$SUSFS_CONF" 2>/dev/null | cut -d: -f2 | tr -d ' "')"
+                        [ -n "$v" ] && echo "$v" && return
+                    fi
+                    echo "$d"
+                }
+
                 if [ -x "${SUSFS_BIN}" ]; then
                     log_s "MANUAL" "Manual refresh requested from BruhMount WebUI"
-                    for p in /data/adb /data/adb/modules /data/adb/nomount /data/adb/ksu /data/adb/ap /data/adb/magisk /data/local/tmp; do
-                        if [ -e "$p" ]; then
-                            "${SUSFS_BIN}" add_sus_path "$p" 2>/dev/null
-                            log_s "ACTION" "add_sus_path: $p -> [SUCCESS]"
-                        fi
-                    done
-                    for m in /data/adb/modules/*; do
-                        if [ -d "$m" ]; then
-                            "${SUSFS_BIN}" add_sus_path "$m" 2>/dev/null
-                            log_s "MODULE" "add_sus_path: \${m##*/} -> [SUCCESS]"
-                        fi
-                    done
-                    find -L /data/adb/modules -type f -name "*.so" 2>/dev/null | while read -r lib; do
-                        "${SUSFS_BIN}" add_sus_map "$lib" 2>/dev/null
-                        log_s "MAP" "add_sus_map: \${lib##*/} -> [SUCCESS]"
-                    done
-                    "${SUSFS_BIN}" enable_avc_log_spoofing 1 2>/dev/null
-                    log_s "SECURITY" "enable_avc_log_spoofing: 1 -> [SUCCESS]"
+
+                    c_path=$(get_c "susfs_path_hide" "true")
+                    c_map=$(get_c "susfs_map_hide" "true")
+                    c_avc=$(get_c "susfs_avc_spoof" "true")
+                    c_mnt=$(get_c "susfs_hide_mounts" "true")
+                    c_kst=$(get_c "susfs_kstat_spoof" "true")
+                    c_log=$(get_c "susfs_kernel_log" "false")
+
+                    # 1. Path hiding
+                    if [ "$c_path" = "true" ]; then
+                        for p in /data/adb /data/adb/modules /data/adb/modules_update /data/adb/nomount /data/adb/ksu /data/adb/ksu/bin /data/adb/ap /data/adb/ap/bin /data/adb/magisk /data/adb/magisk.db /data/adb/magisk_simple /data/local/tmp /data/local/tmp/main.jar /data/adb/lspd /data/adb/tricky_store /data/adb/pif /data/adb/shamiko /data/adb/snickle /data/adb/rezygisk /data/adb/riru /data/adb/service.d /data/adb/post-fs-data.d /data/adb/boot-completed.d /data/adb/env /data/su /sbin/.magisk /system/addon.d /system/bin/install-recovery.sh /vendor/bin/install-recovery.sh /sys/block/loop0 /cache/magisk.log /sdcard/TWRP /sdcard/Fox /sdcard/MT2 /sdcard/APKTool /sdcard/Apktool_M /sdcard/TitaniumBackup /sdcard/SwiftBackup /sdcard/AppManager /sdcard/Android/data/io.github.muntashirakon.AppManager /sdcard/Android/media/io.github.muntashirakon.AppManager /sdcard/Android/data/bin.mt.plus /sdcard/Android/data/com.termux /data/media/0/TWRP /data/media/0/Fox /data/media/0/MT2 /data/media/0/APKTool /data/media/0/Apktool_M /data/media/0/TitaniumBackup /data/media/0/SwiftBackup /data/media/0/AppManager /data/media/0/Android/data/io.github.muntashirakon.AppManager /data/media/0/Android/media/io.github.muntashirakon.AppManager /data/media/0/Android/data/bin.mt.plus /data/media/0/Android/data/com.termux; do
+                            if [ -e "$p" ]; then
+                                case "$p" in
+                                    /sdcard/*|/data/media/*)
+                                        "${SUSFS_BIN}" add_sus_path_loop "$p" 2>/dev/null || "${SUSFS_BIN}" add_sus_path "$p" 2>/dev/null
+                                        ;;
+                                    *)
+                                        "${SUSFS_BIN}" add_sus_path "$p" 2>/dev/null
+                                        ;;
+                                esac
+                                log_s "ACTION" "add_sus_path: $p -> [SUCCESS]"
+                            fi
+                        done
+                        for m in /data/adb/modules/*; do
+                            if [ -d "$m" ]; then
+                                "${SUSFS_BIN}" add_sus_path "$m" 2>/dev/null
+                                log_s "MODULE" "add_sus_path: \${m##*/} -> [SUCCESS]"
+                            fi
+                        done
+                    fi
+
+                    # 2. Maps cloaking
+                    if [ "$c_map" = "true" ]; then
+                        find -L /data/adb/modules -type f -name "*.so" 2>/dev/null | while read -r lib; do
+                            "${SUSFS_BIN}" add_sus_map "$lib" 2>/dev/null
+                            log_s "MAP" "add_sus_map: \${lib##*/} -> [SUCCESS]"
+                        done
+                    fi
+
+                    # 3. Mount hiding
+                    if [ "$c_mnt" = "true" ]; then
+                        "${SUSFS_BIN}" hide_sus_mnts_for_non_su_procs 1 2>/dev/null
+                        log_s "MOUNT" "hide_sus_mnts_for_non_su_procs: 1 -> [SUCCESS]"
+                    else
+                        "${SUSFS_BIN}" hide_sus_mnts_for_non_su_procs 0 2>/dev/null
+                        log_s "MOUNT" "hide_sus_mnts_for_non_su_procs: 0 -> [DISABLED]"
+                    fi
+
+                    # 4. AVC spoofing
+                    if [ "$c_avc" = "true" ]; then
+                        "${SUSFS_BIN}" enable_avc_log_spoofing 1 2>/dev/null
+                        log_s "SECURITY" "enable_avc_log_spoofing: 1 -> [SUCCESS]"
+                    else
+                        "${SUSFS_BIN}" enable_avc_log_spoofing 0 2>/dev/null
+                        log_s "SECURITY" "enable_avc_log_spoofing: 0 -> [DISABLED]"
+                    fi
+
+                    # 5. Kstat spoofing
+                    if [ "$c_kst" = "true" ]; then
+                        for kp in /system/etc/hosts /system/bin/su /system/xbin/su /system/bin/daemonsu /sbin/su /vendor/bin/su /system/bin/magisk /system/framework/services.jar /system/framework/framework.jar /system/build.prop /vendor/build.prop; do
+                            if [ -e "$kp" ]; then
+                                "${SUSFS_BIN}" add_sus_kstat "$kp" 2>/dev/null
+                                "${SUSFS_BIN}" update_sus_kstat "$kp" 2>/dev/null
+                                log_s "KSTAT" "add_sus_kstat: $kp -> [SUCCESS]"
+                            fi
+                        done
+                    fi
+
+                    # 6. Kernel logging
+                    if [ "$c_log" = "true" ]; then
+                        "${SUSFS_BIN}" enable_log 1 2>/dev/null
+                        log_s "LOG" "enable_log: 1 -> [ENABLED]"
+                    else
+                        "${SUSFS_BIN}" enable_log 0 2>/dev/null
+                        log_s "LOG" "enable_log: 0 -> [SILENCED]"
+                    fi
+
                     log_s "STATUS" "SUSFS background cloak updated."
                 fi
             `;
@@ -1383,6 +1852,13 @@ function initDelegationAndAttach() {
             setTimeout(() => {
                 removeExclusion(uid, label, item);
             }, 0);
+        }
+    });
+
+    document.getElementById('preset-chips-list')?.addEventListener('click', (e) => {
+        const chip = e.target.closest('.preset-chip');
+        if (chip) {
+            handlePresetClick(chip);
         }
     });
 

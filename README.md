@@ -36,33 +36,67 @@ With **BruhMount**, your modules (audio mods, fonts, system tweaks, vendor overl
 
 ## 🏗️ Architecture & How It Works
 
-```
-┌────────────────────────────────────────────────────────┐
-│                   Android Userspace                    │
-│  [Isolated Application]       [Standard App / System]  │
-│             │                            │             │
-│   (UID checked by BruhMount)             │             │
-│   [Normal Path Resolution]     [VFS Interception]      │
-│             │                            │             │
-└─────────────┼────────────────────────────┼─────────────┘
-              ▼                            ▼
-┌────────────────────────────────────────────────────────┐
-│                   Linux Kernel Layer                   │
-│                                                        │
-│  ┌────────────────────────┐  ┌──────────────────────┐  │
-│  │     NoMount Subsystem  │  │   Kernel SUSFS Engine│  │
-│  │  - RAM-cached dentries │  │  - Path & Stat Hiding│  │
-│  │  - Keyring IPC         │  │  - Map Inode Cloaking│  │
-│  │  - Zero /proc/mounts   │  │  - AVC Denial Spoof  │  │
-│  └────────────────────────┘  └──────────────────────┘  │
-│                                                        │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Userspace["Android Userspace Layer"]
+        subgraph Apps["Application Execution Contexts"]
+            IsoApp["Isolated / Whitelisted Apps<br/><i>(Banking • GMS • Momo • DRM)</i>"]
+            StdApp["Standard Apps & Framework<br/><i>(Unprivileged UID ≥ 10000)</i>"]
+            Scanner["Root & Tampering Scanners<br/><i>(Checks /proc/mounts, maps, kmsg)</i>"]
+        end
+        RootMgr["Root Manager / Metamodule Script<br/><i>(KernelSU • APatch • Magisk • metamount.sh)</i>"]
+    end
+
+    subgraph Kernel["Linux Kernel Layer"]
+        subgraph VFS["Virtual Filesystem (VFS) & Keyring Interception"]
+            UIDGate{"Caller UID Gate<br/><i>In-Memory Exclusion Check</i>"}
+            Keyring["Linux Keyring IPC Cache<br/><code>SYS_add_key('nomount', ...)</code><br/><i>Zero /dev nodes • Zero ioctl</i>"]
+            DentryRouter["In-Memory Dentry Router<br/><i>RAM path & inode redirection</i>"]
+            Whiteout["Whiteout & Opaque Filter<br/><i>Masks stock files deleted by modules</i>"]
+        end
+
+        subgraph SUSFS["SUSFS Kernel Stealth Engine"]
+            SusPath["Path Concealment<br/><code>sus_path / sus_path_loop</code><br/><i>Hides /data/adb & root tools</i>"]
+            SusMount["Mount Cloaking<br/><code>hide_sus_mnts_for_non_su_procs</code><br/><i>Zero mount footprint</i>"]
+            SusKstat["Stat & Inode Forgery<br/><code>add_sus_kstat / update_sus_kstat</code><br/><i>Forges st_ino/st_dev to stock</i>"]
+            SusMap["Maps Masking<br/><code>add_sus_map</code><br/><i>Scrubs .so libs from /proc/*/maps</i>"]
+            SusLog["Log Silencing & AVC Spoof<br/><code>enable_log(0) • avc_spoof</code><br/><i>Cleans audit & dmesg logs</i>"]
+        end
+    end
+
+    subgraph Storage["Physical Storage Layer"]
+        StockFS[("Stock Partitions<br/>/system • /vendor • /product • /odm")]
+        ModFS[("Module Storage<br/>/data/adb/modules/*")]
+    end
+
+    RootMgr -- "1. Install VFS Rules (at boot)" --> Keyring
+    RootMgr -- "2. Register Stealth Rules" --> SUSFS
+
+    IsoApp -- "POSIX Syscalls (openat, stat...)" --> UIDGate
+    StdApp -- "POSIX Syscalls (openat, stat...)" --> UIDGate
+
+    UIDGate -- "Whitelisted UID (Bypass)" --> StockFS
+    UIDGate -- "Standard UID (Intercept)" --> DentryRouter
+    Keyring -. "Directs Routing" .-> DentryRouter
+
+    DentryRouter -- "Redirected Path" --> ModFS
+    DentryRouter -- "Deleted File" --> Whiteout
+    DentryRouter -- "Unmodified Path" --> StockFS
+
+    Scanner -- "Scans /proc, /sys & paths" --> SUSFS
+    SUSFS -- "Filtered Stock Responses" --> Scanner
 ```
 
-When an app accesses a redirected system file (e.g., `/vendor/etc/audio_effects.xml`):
-1. **UID Validation:** BruhMount inspects the calling UID. If isolated, the original stock file is returned immediately.
-2. **RAM-Level Linkage:** For standard applications, the kernel intercepts the directory operation in RAM and transparently maps read, `mmap`, and iteration operations to the module file.
-3. **SUSFS Protection:** Root paths and module shared libraries are concealed from unprivileged processes.
+When an application accesses filesystem paths:
+1. **Control Plane Initialization:** At early boot (`post-fs-data`), `metamount.sh` initializes the kernel driver, loads redirection rules into the Linux Keyring in RAM (`SYS_add_key`), and configures SUSFS kernel filters.
+2. **UID Validation Gate:** When an app issues a filesystem syscall (`openat()`, `stat()`, `execve()`), BruhMount inspects the calling UID in kernel RAM. If isolated (e.g. Banking apps, Play Services, or user exclusions), it completely bypasses redirection and returns the stock partition file directly.
+3. **In-Memory VFS Interception:** For standard applications, the kernel intercepts path resolution at the dentry layer in RAM via the Keyring table:
+   - Modified module files redirect seamlessly to `/data/adb/modules/<mod>/...`.
+   - Replaced/deleted files hit the whiteout filter, returning `ENOENT`.
+   - Unmodified files pass through directly to stock partitions.
+   - **Zero mount namespace entries** are created (`/proc/mounts` and `/proc/self/mountinfo` remain 100% clean).
+4. **SUSFS Kernel Shielding:** Root directories (`/data/adb`), active modules, mount points (`sus_mount`), and injected shared libraries (`sus_map`) are cloaked from unprivileged processes (UID ≥ 10000), file status attributes (`sus_kstat`) forge stock filesystem inodes, and kernel logs (`enable_log 0`) are silenced.
+5. **Resilient Recovery Engine:** If an incompatible module causes early boot instability, BruhMount automatically quarantines the culprit module on boot attempt #2, or drops into full safe mode on attempt #3 or via physical Volume-Down button hold.
 
 ---
 
@@ -100,10 +134,23 @@ nm version                  # Print kernel NoMount subsystem version
 
 ### 2. `ksu_susfs` (SUSFS Control Tool)
 ```bash
-ksu_susfs show              # Display active SUSFS kernel version and features
-ksu_susfs add_sus_path <p>  # Add custom path to SUSFS hide list
-ksu_susfs add_sus_map <lib> # Mask mmapped shared library from /proc/self/maps
+ksu_susfs show                         # Display active SUSFS kernel version and features
+ksu_susfs add_sus_path <path>          # Add custom path to SUSFS hide list
+ksu_susfs add_sus_map <lib>            # Mask mmapped shared library from /proc/self/maps
+ksu_susfs hide_sus_mnts_for_non_su_procs 1 # Hide suspicious root mounts from non-su apps
+ksu_susfs enable_avc_log_spoofing 1    # Spoof audit denials to u:r:priv_app:s0
+ksu_susfs add_sus_kstat <path>         # Register path for inode/dev stat spoofing
+ksu_susfs enable_log 0                 # Silence kernel dmesg logging
 ```
+
+---
+
+### 🚨 Emergency Safe Mode & Hardware Recovery
+
+BruhMount includes multi-layered crash and bootloop resilience:
+* **Hardware Volume-Down Override:** Hold the physical **Volume-Down** button during early boot to abort metamodule loading and enter Emergency Safe Mode instantly.
+* **Intelligent Culprit Isolation:** If an incompatible module causes early boot instability, BruhMount tracks the offending module in `.last_module` and automatically disables that specific culprit (`touch /data/adb/modules/<bad_mod>/disable`), restoring device stability without removing other working modules.
+* **Triple-Semaphore Counter:** If 3 consecutive boot attempts fail before reaching `sys.boot_completed`, BruhMount disarms itself automatically (`/data/adb/nomount/safemode`), ensuring you are never forced to reflash from recovery.
 
 ---
 
