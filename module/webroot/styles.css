@@ -385,7 +385,7 @@ md-icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
 .pull-to-refresh-indicator.refreshing md-icon { animation: spin 1s linear infinite; }
 
 .bottom-nav {
-    position: fixed; bottom: 0; left: 0; width: 100%; justify-content: space-evenly;
+    position: fixed; inset: auto 0 0; width: 100%; justify-content: space-evenly;
     height: calc(var(--nav-height) + var(--insets-bottom)); padding-bottom: var(--insets-bottom);
     background-color: var(--nm-nav-background);
     backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 100;
@@ -412,7 +412,7 @@ md-icon svg { width: 1em; height: 1em; fill: currentColor; display: block; }
 
 #fab-container {
     position: fixed; bottom: calc(var(--nav-height) + var(--insets-bottom) + 16px);
-    right: 16px; z-index: 90; opacity: 0; transform: scale(0.8);
+    inset-inline-end: 16px; z-index: 90; opacity: 0; transform: scale(0.8);
     pointer-events: none; transition: transform 0.3s, opacity 0.2s;
 }
 #fab-container.visible { opacity: 1; transform: scale(1); pointer-events: auto; }

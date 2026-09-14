@@ -1,6 +1,9 @@
 ELFkickers-3.2
 sstrip
 ko-loader*
+lkmloader*
+lkmloader_src
+ko_loader_src
 nm
 *.zip
 *.cmd

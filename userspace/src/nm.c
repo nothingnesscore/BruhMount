@@ -86,18 +86,14 @@ void c_main(long *sp) {
             char *cursor = payload->buffer;
 
             for (int i = 0; i + step - 1 < p_count; i += step) {
-                char *v_resolved = workspace.virtual_path;
-                char *v_end = resolve_path(v_resolved, sizeof(workspace.virtual_path), cwd, argv[i]);
-                if (!v_end) { exit_code = 3; continue; }
-                int v_len = v_end - v_resolved;
+                int v_len = resolved_path_length(cwd, argv[i]);
+                if (v_len < 0) { exit_code = 3; continue; }
                 if (!v_len) { exit_code = 3; continue; }
 
                 int r_len = 0;
-                char *r_resolved = workspace.real_path;
                 if (action == ACTION_RULE_ADD && !is_whiteout) {
-                    char *r_end = resolve_path(r_resolved, sizeof(workspace.real_path), cwd, argv[i+1]);
-                    if (!r_end) { exit_code = 3; continue; }
-                    r_len = r_end - r_resolved;
+                    r_len = resolved_path_length(cwd, argv[i+1]);
+                    if (r_len < 0) { exit_code = 3; continue; }
                     if (!r_len) { exit_code = 3; continue; }
                 }
 
@@ -116,15 +112,13 @@ void c_main(long *sp) {
                     h->flags = (is_whiteout) ? 4 : 0; h->uid = target_uid;
                     h->v_len = v_len; h->r_len = r_len;
 
-                    memcpy(cursor + sizeof(*h), v_resolved, v_len);
-                    if (r_len > 0) memcpy(cursor + sizeof(*h) + v_len, r_resolved, r_len);
-                    cursor += sizeof(*h) + v_len + r_len;
+                    cursor = resolve_path(cursor + sizeof(*h), cwd, argv[i]);
+                    if (r_len > 0) cursor = resolve_path(cursor, cwd, argv[i+1]);
                 } else {
                     struct nm_del_hdr *h = (void *)cursor;
                     h->uid = target_uid; h->v_len = v_len;
 
-                    memcpy(cursor + sizeof(*h), v_resolved, v_len);
-                    cursor += sizeof(*h) + v_len;
+                    cursor = resolve_path(cursor + sizeof(*h), cwd, argv[i]);
                 }
             }
 
@@ -175,9 +169,10 @@ void c_main(long *sp) {
 
         case ACTION_RULE_LIST:
         case ACTION_UID_LIST: {
+            struct nm_output output = { workspace.cwd, 0 };
             int is_uids = (action == ACTION_UID_LIST);
             if (is_uids) is_json = 1;
-            if (is_json) print_literal("[\n");
+            if (is_json) list_print_literal(&output, "[\n");
             int offset = 2;
 
             payload->cmd = is_uids ? NM_CMD_GET_UIDS : NM_CMD_GET_LIST;
@@ -191,8 +186,8 @@ void c_main(long *sp) {
                     if (is_uids) {
                         unsigned int uid = *(unsigned int *)(data + pos);
                         pos += 4;
-                        if (offset == 0) print_literal(",\n");
-                        print_literal("  "); print_uint(uid);
+                        if (offset == 0) list_print_literal(&output, ",\n");
+                        list_print_literal(&output, "  "); list_print_uint(&output, uid);
                         offset = 0;
                     } else {
                         struct nm_rule_hdr *h = (void *)(data + pos);
@@ -206,26 +201,27 @@ void c_main(long *sp) {
                         int is_virtual_dir = (flags & 2);
 
                         if (is_json) {
-                            print_literal_offset(",\n  {\n    \"virtual\": \"", offset); offset = 0;
-                            print_strn(v, vlen);
-                            if (is_white_flag) print_literal("\",\n    \"whiteout\": true");
-                            else if (is_virtual_dir) print_literal("\",\n    \"virtual_dir\": true");
-                            else { print_literal("\",\n    \"real\": \""); print_strn(r, rlen); print_literal("\""); }
-                            if (uid != 0) { print_literal(",\n    \"uid\": "); print_uint(uid); }
-                            print_literal("\n  }");
+                            list_print_literal_offset(&output, ",\n  {\n    \"virtual\": \"", offset); offset = 0;
+                            list_print_strn(&output, v, vlen);
+                            if (is_white_flag) list_print_literal(&output, "\",\n    \"whiteout\": true");
+                            else if (is_virtual_dir) list_print_literal(&output, "\",\n    \"virtual_dir\": true");
+                            else { list_print_literal(&output, "\",\n    \"real\": \""); list_print_strn(&output, r, rlen); list_print_literal(&output, "\""); }
+                            if (uid != 0) { list_print_literal(&output, ",\n    \"uid\": "); list_print_uint(&output, uid); }
+                            list_print_literal(&output, "\n  }");
                         } else {
-                            print_strn(v, vlen);
-                            if (is_white_flag) print_literal(" (whiteout)");
-                            else if (is_virtual_dir) print_literal(" (virtual dir)");
-                            else { print_literal(" -> "); print_strn(r, rlen); }
-                            if (uid != 0) { print_literal(" [UID: "); print_uint(uid); print_literal("]"); }
-                            print_literal("\n");
+                            list_print_strn(&output, v, vlen);
+                            if (is_white_flag) list_print_literal(&output, " (whiteout)");
+                            else if (is_virtual_dir) list_print_literal(&output, " (virtual dir)");
+                            else { list_print_literal(&output, " -> "); list_print_strn(&output, r, rlen); }
+                            if (uid != 0) { list_print_literal(&output, " [UID: "); list_print_uint(&output, uid); list_print_literal(&output, "]"); }
+                            list_print_literal(&output, "\n");
                         }
                     }
                 }
             }
 
-            if (is_json) print_literal("\n]\n");
+            if (is_json) list_print_literal(&output, "\n]\n");
+            list_flush(&output);
             exit_code = 0;
             break;
         }

@@ -78,6 +78,7 @@
 /* --- DEFS --- */
 #define NOMOUNT_MAGIC_SIG 0x4E4F4D4F554E54ULL
 #define PATH_MAX  4096
+#define NM_EINTR  4
 
 enum {
     NM_CMD_UNSPEC = 0,
@@ -121,8 +122,6 @@ struct nm_payload {
 struct nm_workspace {
     struct nm_payload payload;
     char cwd[PATH_MAX];
-    char virtual_path[PATH_MAX];
-    char real_path[PATH_MAX];
 } __attribute__((aligned(4096)));
 
 _Static_assert(sizeof(struct nm_payload) == 4096, "payload must occupy one page");
@@ -142,19 +141,6 @@ struct nm_del_hdr {
 
 /* --- UTILS --- */
 #define noinline __attribute__((noinline))
-#if defined(__x86_64__)
-static inline void *memcpy(void *dst, const void *src, unsigned long n) {
-    void *ret = dst;
-    __asm__ __volatile__("rep movsb" : "+D"(dst), "+S"(src), "+c"(n) : : "memory");
-    return ret;
-}
-#else
-static inline void *memcpy(char *dst, const char *src, int len) {
-    for (int i = 0; i < len; i++) dst[i] = src[i];
-    return dst;
-}
-#endif
-
 static noinline int strcmp(const char *s1, const char *s2) {
     while (*s1 && (*s1 == *s2)) { s1++; s2++; }
     return *(unsigned char *)s1 - *(unsigned char *)s2;
@@ -165,31 +151,72 @@ static noinline void print_strn(const char *s, unsigned long len) {
 }
 
 #define print_literal(s) print_strn((s), sizeof(s) - 1)
-#define print_literal_offset(s, offset) print_strn((s) + (offset), sizeof(s) - 1 - (offset))
 
-static noinline void print_uint(unsigned int n) {
+struct nm_output {
+    char *buffer;
+    unsigned int used;
+};
+
+static noinline void list_flush(struct nm_output *out) {
+    unsigned int sent = 0;
+    while (sent < out->used) {
+        long n = sys3(SYS_WRITE, 1, (long)(out->buffer + sent), out->used - sent);
+        if (n == -NM_EINTR) continue;
+        if (n <= 0) break;
+        sent += n;
+    }
+    out->used = 0;
+}
+
+static noinline void list_print_strn(struct nm_output *out, const char *s, unsigned long len) {
+    while (len) {
+        if (out->used == PATH_MAX) list_flush(out);
+        unsigned long n = PATH_MAX - out->used;
+        if (n > len) n = len;
+        for (unsigned long i = 0; i < n; i++) out->buffer[out->used++] = *s++;
+        len -= n;
+    }
+}
+
+#define list_print_literal(out, s) list_print_strn((out), (s), sizeof(s) - 1)
+#define list_print_literal_offset(out, s, offset) list_print_strn((out), (s) + (offset), sizeof(s) - 1 - (offset))
+
+static noinline void list_print_uint(struct nm_output *out, unsigned int n) {
     char buf[10];
     int i = sizeof(buf);
     do {
         buf[--i] = (n % 10) + '0';
         n /= 10;
     } while (n > 0);
-    print_strn(&buf[i], sizeof(buf) - i);
+    list_print_strn(out, &buf[i], sizeof(buf) - i);
 }
 
 /* path resolution */
-static noinline char* resolve_path(char *p, unsigned long capacity, const char *cwd, const char *rel) {
-    char *end = p + capacity;
+static noinline int resolved_path_length(const char *cwd, const char *rel) {
+    int length = 0;
+    if (cwd && *rel != '/') {
+        while (*cwd++) {
+            if (length == PATH_MAX) return -1;
+            length++;
+        }
+        if (length == PATH_MAX) return -1;
+        length++;
+    }
+    while (*rel++) {
+        if (length == PATH_MAX) return -1;
+        length++;
+    }
+    return length;
+}
+
+static noinline char* resolve_path(char *p, const char *cwd, const char *rel) {
     if (cwd && *rel != '/') {
         while (*cwd) {
-            if (p == end) return 0;
             *p++ = *cwd++;
         }
-        if (p == end) return 0;
         *p++ = '/';
     }
     while (*rel) {
-        if (p == end) return 0;
         *p++ = *rel++;
     }
     return p;

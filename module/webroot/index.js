@@ -30,7 +30,8 @@ const LOCALE_NAMES = {
     tr: 'Türkçe',
     vi: 'Tiếng Việt',
     bn: 'বাংলা',
-    ja: '日本語'
+    ja: '日本語',
+    ar: 'العربية'
 };
 
 const numberFormatterCache = Object.create(null);
@@ -80,6 +81,7 @@ async function setAppLocale(locale, refreshView = true) {
 
     translations = translationsCache[activeLocale];
     document.documentElement.lang = activeLocale;
+    document.documentElement.dir = (activeLocale === 'ar') ? 'rtl' : 'ltr';
     localStorage.setItem('nm_locale', activeLocale);
     if (!cachedI18nNodes) cachedI18nNodes = document.querySelectorAll('[data-i18n]');
 
@@ -857,6 +859,27 @@ async function loadExclusions() {
     }
 }
 
+async function getRealUidEntries() {
+    // entries: packageName -> [{ uid, userId }, ...]
+    const entries = new Map();
+
+    const { stdout: usersOut } = await exec('pm list users 2>/dev/null');
+    let userIds = [...usersOut.matchAll(/UserInfo\{(\d+):/g)].map(m => m[1]);
+    if (userIds.length === 0) userIds = ['0'];
+
+    for (const userId of userIds) {
+        const { stdout } = await exec(`pm list packages -U --user ${userId} 2>/dev/null`);
+        for (const line of stdout.split('\n')) {
+            const m = line.match(/^package:(\S+)\s+uid:(\d+)/);
+            if (!m) continue;
+            const [, pkgName, uid] = m;
+            if (!entries.has(pkgName)) entries.set(pkgName, []);
+            entries.get(pkgName).push({ uid, userId });
+        }
+    }
+    return entries;
+}
+
 async function ensureAppsCache(force = false) {
     if (!force && allAppsCache.length > 0) return;
 
@@ -905,11 +928,28 @@ async function ensureAppsCache(force = false) {
                 await delay(15); 
             }
 
-            allAppsCache = tempCache.map(app => ({
+            // uses pm to list package uid per user, keep ksu's label/isSystem
+            const uidEntries = await getRealUidEntries();
+            const seenPkg = new Set();
+            const expandedCache = [];
+            for (const app of tempCache) {
+                if (seenPkg.has(app.packageName)) continue;
+                seenPkg.add(app.packageName);
+
+                const instances = uidEntries.get(app.packageName);
+                if (!instances || instances.length === 0) { expandedCache.push(app); continue; }
+                for (const { uid, userId } of instances) {
+                    expandedCache.push({ ...app, uid, userId, isClone: userId !== '0' });
+                }
+            }
+
+            allAppsCache = expandedCache.map(app => ({
                 uid: String(app.uid),
                 packageName: app.packageName,
                 appLabel: app.appLabel || app.packageName,
                 isSystem: Boolean(app.isSystem),
+                isClone: Boolean(app.isClone),
+                userId: app.userId,
                 _search: (app.appLabel || app.packageName).toLowerCase() + app.packageName.toLowerCase()
             })).sort((a, b) => a.appLabel < b.appLabel ? -1 : (a.appLabel > b.appLabel ? 1 : 0));
 
@@ -1010,7 +1050,7 @@ function renderNextAppBatch() {
         <div class="app-item segment-card ${isSel}" data-uid="${app.uid}" data-label="${app.appLabel}" data-pkg="${app.packageName}">
             <img src="ksu://icon/${app.packageName}" class="app-icon-img" loading="lazy" onerror="this.src='${APP_ICON_FALLBACK}'" />
             <div class="app-details"><div class="app-name">${app.appLabel}</div><div class="app-pkg">${app.packageName}</div></div>
-            <div class="app-meta"><div class="uid-label">UID: ${app.uid}</div>${app.isSystem ? '<span class="system-chip">SYS</span>' : ''}</div>
+            <div class="app-meta"><div class="uid-label">UID: ${app.uid}</div>${app.isSystem ? '<span class="system-chip">SYS</span>' : ''}${app.isClone ? `<span class="system-chip">User ${app.userId}</span>` : ''}</div>
         </div>
         `;
     }).join('');
@@ -1523,6 +1563,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     viewLoadState['view-home'] = true;
     await loadHome();
     document.body.classList.remove('loading');
+
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => ensureAppsCache(true));
+    } else {
+        setTimeout(() => ensureAppsCache(true), 200);
+    }
 
     try {
         if (!viewLoadState['view-modules']) loadModules();
