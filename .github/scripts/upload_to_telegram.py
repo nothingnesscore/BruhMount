@@ -18,6 +18,17 @@ def main():
     module_zip = os.environ.get("MODULE_ZIP", "").strip()
     zip_name = os.environ.get("ZIP_NAME", "").strip()
 
+    def sanitize(text: str) -> str:
+        if not text:
+            return ""
+        if bot_token:
+            text = text.replace(bot_token, "***REDACTED_TOKEN***")
+        return text
+
+    if bot_token and (os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS")):
+        # Ensure GitHub Actions runner masks this token from all stdout/stderr logs
+        print(f"::add-mask::{bot_token}")
+
     if not bot_token:
         print("::notice title=Telegram Upload Notice::TELEGRAM_BOT_TOKEN is not configured in repository secrets. Flashable module ZIP was built successfully.")
         print("To enable automatic module uploads to https://t.me/bruhperidot:")
@@ -109,7 +120,8 @@ Changelog:
 
     res = subprocess.run(curl_cmd, capture_output=True, text=True)
     if res.returncode != 0:
-        print(f"::error title=Curl Failed::Curl exited with code {res.returncode}: {res.stderr.strip()}")
+        clean_stderr = sanitize(res.stderr.strip())
+        print(f"::error title=Curl Failed::Curl exited with code {res.returncode}: {clean_stderr}")
 
     out_lines = res.stdout.strip().split("\n")
     http_status = "0"
@@ -120,9 +132,10 @@ Changelog:
         else:
             body_lines.append(line)
     body = "\n".join(body_lines).strip()
+    clean_body = sanitize(body)
 
     print(f"HTTP Status: {http_status}")
-    print(f"Response: {body}")
+    print(f"Response: {clean_body}")
 
     try:
         resp_json = json.loads(body)
@@ -130,12 +143,13 @@ Changelog:
             print(f"🎉 Successfully uploaded {zip_name} to {chat_id}!")
             sys.exit(0)
         else:
-            desc = resp_json.get("description", "Unknown error")
+            desc = sanitize(resp_json.get("description", "Unknown error"))
             print(f"::error title=Telegram Upload Failed::Telegram API error: {desc} (HTTP {http_status})")
             print(f"Please ensure your bot has been added as an Administrator to {chat_id} with 'Post Messages' permission.")
             sys.exit(1)
     except Exception as e:
-        print(f"::error title=Telegram Upload Failed::Failed to parse response: {e}")
+        clean_err = sanitize(str(e))
+        print(f"::error title=Telegram Upload Failed::Failed to parse response: {clean_err}")
         sys.exit(1)
 
 if __name__ == "__main__":

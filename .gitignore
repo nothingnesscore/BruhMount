@@ -12,3 +12,5 @@ nm
 *.mod*
 *.order*
 *.symver*
+__pycache__/
+*.pyc

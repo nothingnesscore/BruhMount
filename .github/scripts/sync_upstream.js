@@ -197,6 +197,7 @@ async function main() {
             ".github/workflows/build.yml",
             ".github/workflows/upstream-sync.yml",
             ".github/scripts/upload_to_telegram.py",
+            ".github/scripts/telegram_upload.py",
             ".github/scripts/sync_upstream.js"
         ];
 

@@ -177,7 +177,11 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || '@bruhperidot' }}
           MODULE_ZIP: ${{ env.MODULE_ZIP }}
           ZIP_NAME: ${{ env.ZIP_NAME }}
-        run: python3 .github/scripts/upload_to_telegram.py
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "::add-mask::$TELEGRAM_BOT_TOKEN"
+          fi
+          python3 .github/scripts/upload_to_telegram.py
 
       - name: Publish GitHub Release & Sync update.json
         if: github.ref == 'refs/heads/master' && success()
