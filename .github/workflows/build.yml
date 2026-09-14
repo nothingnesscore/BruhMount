@@ -201,6 +201,55 @@ jobs:
               --notes "Automated continuous release for SukiSU / KernelSU in-app updates."
           fi
 
+          echo "[+] Checking for major changes and milestone checkpoint triggers..."
+          LAST_MILESTONE_TAG=$(git tag -l "checkpoint-*" --sort=-v:refname 2>/dev/null | head -n 1)
+          if [ -z "$LAST_MILESTONE_TAG" ]; then
+            LAST_MILESTONE_TAG=$(git tag -l "v[0-9]*" --sort=-v:refname 2>/dev/null | head -n 1)
+          fi
+
+          IS_MAJOR=false
+          TRIGGER_REASON=""
+
+          if [ -z "$LAST_MILESTONE_TAG" ]; then
+            IS_MAJOR=true
+            TRIGGER_REASON="Initial milestone release baseline"
+          else
+            echo "[+] Previous milestone tag found: $LAST_MILESTONE_TAG"
+            LOG_SINCE=$(git log --no-merges "${LAST_MILESTONE_TAG}..HEAD" --pretty=format:"%s" 2>/dev/null || git log "${LAST_MILESTONE_TAG}..HEAD" --pretty=format:"%s" 2>/dev/null)
+            COMMIT_DELTA=$(git rev-list --count "${LAST_MILESTONE_TAG}..HEAD" 2>/dev/null || echo "0")
+
+            if echo "$LOG_SINCE" | grep -qiE '(^|\s)(feat(\([^)]+\))?!?:|breaking|major|milestone)'; then
+              IS_MAJOR=true
+              TRIGGER_REASON="Major/feature changes detected since $LAST_MILESTONE_TAG"
+            elif [ "$COMMIT_DELTA" -ge 15 ]; then
+              IS_MAJOR=true
+              TRIGGER_REASON="Accumulated $COMMIT_DELTA commits since $LAST_MILESTONE_TAG"
+            fi
+          fi
+
+          if [ "$IS_MAJOR" = "true" ]; then
+            CHECKPOINT_TAG="checkpoint-${COMMIT_COUNT}-${SHORT_HASH}"
+            CHECKPOINT_TITLE="BruhMount Milestone Checkpoint #${COMMIT_COUNT} (${BASE_VERSION})"
+            echo "[+] Triggering milestone checkpoint release: $CHECKPOINT_TAG ($TRIGGER_REASON)"
+
+            if [ -n "$LAST_MILESTONE_TAG" ]; then
+              MILESTONE_CHANGES=$(git log --no-merges "${LAST_MILESTONE_TAG}..HEAD" --pretty=format:"* %s (%h)" 2>/dev/null)
+            else
+              MILESTONE_CHANGES=$(git log --no-merges -n 25 --pretty=format:"* %s (%h)" 2>/dev/null)
+            fi
+
+            printf "## 🚀 BruhMount Milestone Checkpoint (#%s)\n**Trigger**: %s\n**Version**: %s\n**Commit**: %s\n\n### 📋 Changes Compiled Since Last Checkpoint:\n%s\n\n---\n*Note: For 1-click in-manager updates, SU managers download the rolling \`latest\` release.*\n" "$COMMIT_COUNT" "$TRIGGER_REASON" "$BASE_VERSION" "$SHORT_HASH" "$MILESTONE_CHANGES" > "$RUNNER_TEMP/milestone_notes.md"
+            echo "[+] Tagging and publishing milestone release ${CHECKPOINT_TAG}..."
+            git tag -a "${CHECKPOINT_TAG}" -m "${CHECKPOINT_TITLE}"
+            git push origin "${CHECKPOINT_TAG}" || echo "Warning: git push tag failed"
+
+            gh release create "${CHECKPOINT_TAG}" "${MODULE_ZIP}" \
+              --title "${CHECKPOINT_TITLE}" \
+              --notes-file "$RUNNER_TEMP/milestone_notes.md" || echo "Warning: milestone release create failed"
+          else
+            echo "[+] No major changes or milestone triggers detected. Skipping milestone release creation."
+          fi
+
           echo "[+] Updating update.json in repository..."
           printf '{\n  "version": "%s (%s)",\n  "versionCode": %s,\n  "zipUrl": "https://github.com/nothingnesscore/BruhMount/releases/download/latest/BruhMount.zip",\n  "changelog": "https://raw.githubusercontent.com/nothingnesscore/BruhMount/master/changelog.md"\n}\n' "$BASE_VERSION" "$COMMIT_COUNT" "$VERSION_CODE" > update.json
 

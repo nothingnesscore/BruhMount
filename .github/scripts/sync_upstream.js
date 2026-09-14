@@ -193,6 +193,7 @@ async function main() {
             "module/webroot/theme.css",
             "module/customize.sh",
             "module/metamount.sh",
+            "changelog.md",
             ".github/workflows/build.yml",
             ".github/workflows/upstream-sync.yml",
             ".github/scripts/upload_to_telegram.py",

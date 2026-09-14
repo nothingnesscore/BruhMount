@@ -10,7 +10,7 @@ TARGET_PARTITIONS="system system_ext vendor odm product apex oem optics prism
                     mi_ext my_bigball my_carrier my_company my_engineering my_heytap
                     my_manifest my_preload my_product my_region my_reserve my_stock"
 PROP_FILE="$MODDIR/module.prop"
-BASE_DESC="A metamodule that replaces OverlayFS/MagicMount with VFS path redirection."
+BASE_DESC="Unified NoMount VFS Metamodule with Built-in SUSFS Automation. Zero mount table footprint."
 
 load_ko() {
     if command -v ksud >/dev/null 2>&1 && ksud -h 2>&1 | grep -qE '(^|[[:space:]])insmod([[:space:]]|$)'; then
@@ -187,6 +187,6 @@ fi
 # NOTE: moved to boot-completed.sh
 # rm -f "$BOOT_SEMAPHORE"
 # echo "[OK] Boot phase completed safely." >> "$LOG_FILE"
-sed -i "s|^description=.*|description=$BASE_DESC|" "$PROP_FILE"
+sed -i "s|^description=.*|description=${BASE_DESC}|" "$PROP_FILE"
 
 exit 0
